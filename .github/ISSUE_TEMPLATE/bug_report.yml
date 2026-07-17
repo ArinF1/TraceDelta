@@ -1,0 +1,78 @@
+name: Bug report
+description: Report a reproducible TraceDelta defect using sanitized data.
+title: "[Bug]: "
+labels:
+  - bug
+  - triage
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thank you for reporting a problem. Never attach credentials, personal data, internal infrastructure details, or raw production traces.
+
+  - type: input
+    id: version
+    attributes:
+      label: TraceDelta version
+      description: Provide a release, commit SHA, or branch name.
+      placeholder: v0.1.0-dev or commit SHA
+    validations:
+      required: true
+
+  - type: input
+    id: environment
+    attributes:
+      label: Environment
+      description: Include operating system, architecture, and Go version when relevant.
+      placeholder: Ubuntu 24.04, amd64, Go 1.26.0
+    validations:
+      required: true
+
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: Reproduction steps
+      description: Provide the smallest deterministic sequence that demonstrates the problem.
+      placeholder: |
+        1. Run ...
+        2. Compare the attached synthetic fixtures ...
+        3. Observe ...
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behavior
+      description: What should have happened?
+    validations:
+      required: true
+
+  - type: textarea
+    id: actual
+    attributes:
+      label: Actual behavior
+      description: What happened instead? Include sanitized output and exact exit codes when useful.
+    validations:
+      required: true
+
+  - type: textarea
+    id: fixture
+    attributes:
+      label: Minimal synthetic fixture or additional context
+      description: Attach only synthetic, sanitized data. A minimal fixture is strongly preferred.
+      render: json
+    validations:
+      required: false
+
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: Safety and duplicate checks
+      options:
+        - label: I searched existing issues for this problem.
+          required: true
+        - label: I removed credentials, personal data, raw production traces, and other sensitive values.
+          required: true
+        - label: This is not a security vulnerability; security issues follow SECURITY.md.
+          required: true

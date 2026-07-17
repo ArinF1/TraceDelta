@@ -1,0 +1,42 @@
+# Go build and test artifacts
+/bin/
+/dist/
+/.gocache/
+/.gotmp/
+/tracedelta
+/tracedelta.exe
+*.test
+*.out
+coverage*.txt
+coverage*.html
+
+# Local trace data (committed synthetic fixtures under testdata remain tracked)
+/local-traces/
+/traces/
+*.otlp.json
+*.trace.json
+!testdata/**/*.json
+
+# Generated reports and temporary output
+/reports/
+/tmp/
+/tracedelta-report.*
+*.tmp
+
+# Local environment and secrets
+.env
+.env.*
+!.env.example
+
+# Editors and IDEs
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# Operating-system files
+.DS_Store
+Thumbs.db
+Desktop.ini
+$RECYCLE.BIN/

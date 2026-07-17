@@ -1,0 +1,70 @@
+name: Feature request
+description: Propose a focused addition or behavior change for TraceDelta.
+title: "[Feature]: "
+labels:
+  - enhancement
+  - triage
+body:
+  - type: markdown
+    attributes:
+      value: |
+        TraceDelta is intentionally narrow in v0.1. Explain the runtime-diffing problem before proposing an implementation.
+
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem
+      description: What user problem or missing workflow should TraceDelta address?
+      placeholder: When comparing traces, I cannot ...
+    validations:
+      required: true
+
+  - type: textarea
+    id: outcome
+    attributes:
+      label: Desired outcome
+      description: Describe observable behavior and how a user would know it works.
+    validations:
+      required: true
+
+  - type: textarea
+    id: example
+    attributes:
+      label: Example
+      description: Show a sanitized command, input shape, or expected report when helpful.
+    validations:
+      required: false
+
+  - type: dropdown
+    id: area
+    attributes:
+      label: Primary area
+      options:
+        - OTLP parsing
+        - Normalization
+        - Trace or span matching
+        - Semantic diffing
+        - Reporting
+        - CLI and configuration
+        - CI or GitHub integration
+        - Documentation or developer experience
+    validations:
+      required: true
+
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives considered
+      description: Describe workarounds or simpler approaches you considered.
+    validations:
+      required: false
+
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: Checks
+      options:
+        - label: I searched the roadmap, task backlog, and existing issues.
+          required: true
+        - label: This request does not include sensitive or production trace data.
+          required: true

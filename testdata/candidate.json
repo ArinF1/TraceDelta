@@ -1,0 +1,103 @@
+{
+  "resourceSpans": [
+    {
+      "resource": {
+        "attributes": [
+          {
+            "key": "service.name",
+            "value": {
+              "stringValue": "checkout-service"
+            }
+          }
+        ]
+      },
+      "scopeSpans": [
+        {
+          "scope": {
+            "name": "tracedelta-example"
+          },
+          "spans": [
+            {
+              "traceId": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+              "spanId": "aaaaaaaaaaaaaaaa",
+              "name": "checkout.handle",
+              "kind": "SPAN_KIND_SERVER",
+              "startTimeUnixNano": "2000000000",
+              "endTimeUnixNano": "2400000000",
+              "attributes": [
+                {
+                  "key": "http.request.method",
+                  "value": {
+                    "stringValue": "POST"
+                  }
+                },
+                {
+                  "key": "http.route",
+                  "value": {
+                    "stringValue": "/checkout"
+                  }
+                }
+              ],
+              "status": {
+                "message": "payment failed",
+                "code": "STATUS_CODE_ERROR"
+              }
+            },
+            {
+              "traceId": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+              "spanId": "bbbbbbbbbbbbbbbb",
+              "parentSpanId": "aaaaaaaaaaaaaaaa",
+              "name": "auth.validate",
+              "kind": "SPAN_KIND_INTERNAL",
+              "startTimeUnixNano": "2010000000",
+              "endTimeUnixNano": "2025000000",
+              "status": {
+                "code": "STATUS_CODE_OK"
+              }
+            },
+            {
+              "traceId": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+              "spanId": "dddddddddddddddd",
+              "parentSpanId": "aaaaaaaaaaaaaaaa",
+              "name": "inventory.reserve",
+              "kind": "SPAN_KIND_CLIENT",
+              "startTimeUnixNano": "2030000000",
+              "endTimeUnixNano": "2070000000",
+              "attributes": [
+                {
+                  "key": "rpc.service",
+                  "value": {
+                    "stringValue": "inventory-service"
+                  }
+                }
+              ],
+              "status": {
+                "code": "STATUS_CODE_OK"
+              }
+            },
+            {
+              "traceId": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+              "spanId": "cccccccccccccccc",
+              "parentSpanId": "aaaaaaaaaaaaaaaa",
+              "name": "payment.charge",
+              "kind": "SPAN_KIND_CLIENT",
+              "startTimeUnixNano": "2100000000",
+              "endTimeUnixNano": "2345000000",
+              "attributes": [
+                {
+                  "key": "rpc.service",
+                  "value": {
+                    "stringValue": "payment-service"
+                  }
+                }
+              ],
+              "status": {
+                "code": "STATUS_CODE_OK"
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
