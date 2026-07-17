@@ -21,3 +21,11 @@ Use this shape:
 - **Decisions:** Accepted [ADR 0001](decisions/0001-initial-architecture.md): Go, local CLI, JSON fixtures, staged pipeline, no database/web app, and minimal dependencies.
 - **Validation:** Go 1.26.0 on Windows: `gofmt` clean; normal and race-enabled tests passed across all eight packages (16 top-level test functions, with `internal/model` intentionally having no direct test file); `go vet` clean; CLI build and `scripts/check.sh` passed; built CLI exit codes `1`, `0`, and `2` were verified for differences, equality, and invalid format. GNU Make and a YAML parser were unavailable; underlying commands and workflow structure were checked directly.
 - **Next:** TD-004 — expand the OTLP JSON parser while preserving contextual errors and the compatibility fixture.
+
+## 2026-07-17 — Configure private GitHub metadata
+
+- **Scope:** TD-026: replace temporary repository, Go module, and code-owner values with the canonical private GitHub metadata.
+- **Outcome:** Updated repository links to `ArinF1/TraceDelta`, changed the Go module and imports to `github.com/ArinF1/TraceDelta`, and assigned `@ArinF1` as the default code owner. The security email remains an explicit placeholder until a monitored address is available.
+- **Decisions:** Keep `security@example.com` while the repository is private; it remains a documented blocker for public release.
+- **Validation:** `gofmt` clean; `go mod tidy` and `go mod verify` passed; normal and race-enabled tests passed across all eight packages; `go vet` clean; CLI build and `scripts/check.sh` passed; the example produced the expected four findings and exit code `1`.
+- **Next:** TD-004 — expand the OTLP JSON parser; replace the security contact before changing repository visibility to public.

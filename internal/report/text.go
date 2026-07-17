@@ -7,7 +7,7 @@ import (
 	"strings"
 	"unicode"
 
-	"github.com/example/tracedelta/internal/diff"
+	"github.com/ArinF1/TraceDelta/internal/diff"
 )
 
 // Metadata identifies the compared inputs in a report.

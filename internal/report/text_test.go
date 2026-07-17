@@ -4,7 +4,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/example/tracedelta/internal/diff"
+	"github.com/ArinF1/TraceDelta/internal/diff"
 )
 
 func TestWriteTextRendersDeterministicReport(t *testing.T) {

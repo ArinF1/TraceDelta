@@ -1,4 +1,3 @@
-// Placeholder: replace this module path with the final repository path before publishing.
-module github.com/example/tracedelta
+module github.com/ArinF1/TraceDelta
 
 go 1.26

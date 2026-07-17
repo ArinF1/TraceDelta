@@ -21,7 +21,7 @@ A release candidate must satisfy all of the following:
 3. `CHANGELOG.md` contains all user-visible changes and no unreleased claims are missing.
 4. CLI flags, output formats, exit codes, schemas, and compatibility notes are documented.
 5. Test fixtures are synthetic and the diff has been reviewed for secrets/personal data.
-6. Placeholder publication values have been replaced everywhere: `OWNER/REPO` URLs, `github.com/example/tracedelta`, `security@example.com`, and the placeholder `CODEOWNERS` ownership entry.
+6. Repository URLs, the Go module path, the security contact, and `CODEOWNERS` are canonical; no publication placeholders remain.
 7. Dependencies and their licenses/security posture have been reviewed.
 8. The complete verification suite passes from a clean checkout.
 

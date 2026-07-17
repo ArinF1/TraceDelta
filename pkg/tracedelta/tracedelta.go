@@ -6,11 +6,11 @@ import (
 	"io"
 	"os"
 
-	"github.com/example/tracedelta/internal/diff"
-	"github.com/example/tracedelta/internal/match"
-	"github.com/example/tracedelta/internal/normalize"
-	"github.com/example/tracedelta/internal/otlp"
-	"github.com/example/tracedelta/internal/report"
+	"github.com/ArinF1/TraceDelta/internal/diff"
+	"github.com/ArinF1/TraceDelta/internal/match"
+	"github.com/ArinF1/TraceDelta/internal/normalize"
+	"github.com/ArinF1/TraceDelta/internal/otlp"
+	"github.com/ArinF1/TraceDelta/internal/report"
 )
 
 // Options controls comparison behavior.

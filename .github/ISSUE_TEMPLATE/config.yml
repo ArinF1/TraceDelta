@@ -1,8 +1,8 @@
 blank_issues_enabled: false
 contact_links:
-  - name: "[REPLACE BEFORE PUBLISHING] Private security report"
-    url: https://github.com/OWNER/REPO/security/advisories/new
-    about: Report vulnerabilities privately; replace OWNER/REPO before publishing.
+  - name: Private security report
+    url: https://github.com/ArinF1/TraceDelta/security/advisories/new
+    about: Report vulnerabilities through GitHub's private reporting channel.
   - name: Support policy
-    url: https://github.com/OWNER/REPO/blob/main/SUPPORT.md
-    about: Read the support and data-safety guidance; replace OWNER/REPO before publishing.
+    url: https://github.com/ArinF1/TraceDelta/blob/main/SUPPORT.md
+    about: Read the support and data-safety guidance.

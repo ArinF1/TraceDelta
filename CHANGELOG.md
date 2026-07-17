@@ -14,11 +14,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 - Synthetic baseline and candidate trace fixtures and unit tests for the current behavior.
 - Local verification commands and GitHub Actions continuous integration configuration.
 
+### Changed
+
+- Replaced pre-publication repository, Go module, and code-owner placeholders with the canonical GitHub metadata.
+
 ### Limitations
 
 - No release has been published.
 - Full OTLP JSON, configurable structural normalization, semantic matching, JSON reports, HTML reports, configuration files, and GitHub pull-request integration are not implemented yet.
 
-[Unreleased]: https://github.com/OWNER/REPO/compare/HEAD...HEAD
-
-<!-- OWNER/REPO is an intentional publication placeholder. Replace it when the canonical repository exists. -->
+[Unreleased]: https://github.com/ArinF1/TraceDelta/commits/main

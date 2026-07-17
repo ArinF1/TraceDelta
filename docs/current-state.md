@@ -6,7 +6,7 @@ Last updated: 2026-07-17
 
 `v0.1.0-dev` — initial development foundation. No release has been published and no compatibility guarantee is implied yet.
 
-The repository uses Go 1.26, the newest stable Go version available when the project was initialized. The module path `github.com/example/tracedelta` is an intentional pre-publication placeholder.
+The repository uses Go 1.26, the newest stable Go version available when the project was initialized. Its canonical module path is `github.com/ArinF1/TraceDelta`.
 
 ## What currently works
 
@@ -54,7 +54,7 @@ The repository uses Go 1.26, the newest stable Go version available when the pro
 
 ## Latest validation record
 
-Validated on 2026-07-17 with `go version go1.26.0 windows/amd64`:
+Revalidated on 2026-07-17 after configuring the canonical GitHub module path, using `go version go1.26.0 windows/amd64`:
 
 ```bash
 gofmt -w <all Go files>
@@ -69,7 +69,7 @@ go mod verify
 
 Formatting was clean; all eight Go packages loaded successfully (seven contain tests, with 16 top-level test functions total); normal and race-enabled tests passed; vet was clean; the CLI built; the shell check script passed; and the standard-library-only module graph verified. The built example produced the documented four findings and returned exactly `1`; comparing the baseline with itself returned `0`; and requesting unsupported JSON output returned `2`. The documented `go run` example also produced the expected report and wrapper exit `1`.
 
-GNU Make and a standalone YAML parser were not installed in the validation environment. The Makefile was reviewed, its underlying commands were run independently, and its shell-equivalent check passed. The GitHub Actions workflow has not yet run on GitHub because no remote is configured.
+GNU Make and a standalone YAML parser were not installed in the validation environment. The Makefile was reviewed, its underlying commands were run independently, and its shell-equivalent check passed. A private GitHub remote is configured; hosted CI status is not asserted by this local validation record.
 
 ## Next recommended task
 

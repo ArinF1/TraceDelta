@@ -3,9 +3,7 @@
 > Runtime behavior diffs for pull requests.
 
 [![Project status: experimental](https://img.shields.io/badge/status-experimental-orange.svg)](#project-status)
-[![CI](https://github.com/OWNER/REPO/actions/workflows/ci.yml/badge.svg)](https://github.com/OWNER/REPO/actions/workflows/ci.yml)
-
-**The CI badge uses the intentional placeholder `OWNER/REPO`; replace it with the publishing GitHub repository before making this project public.**
+[![CI](https://github.com/ArinF1/TraceDelta/actions/workflows/ci.yml/badge.svg)](https://github.com/ArinF1/TraceDelta/actions/workflows/ci.yml)
 
 > [!WARNING]
 > TraceDelta is early-stage software. The current implementation proves a small local comparison path; it is not yet a complete OTLP analyzer or a stable integration contract.
@@ -101,7 +99,7 @@ The current slice implements only the minimum of those stages needed for determi
 
 TraceDelta is experimental and has no stable release yet. `v0.1.0-dev` identifies the repository's current development line, not a published or compatibility-guaranteed release. Files under `docs/` distinguish current behavior from proposed behavior; incomplete features are tracked rather than implied.
 
-The Go module path `github.com/example/tracedelta` is also an intentional pre-publication placeholder, not a real organization or project claim. Replace it together with `OWNER/REPO`, the security contact, and `CODEOWNERS` before publication.
+The canonical Go module path is `github.com/ArinF1/TraceDelta`. Before making the repository public, replace the clearly marked `security@example.com` contact with a monitored private address.
 
 - [Roadmap](ROADMAP.md)
 - [Product specification](docs/product-spec.md)

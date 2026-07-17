@@ -150,6 +150,13 @@ This is the execution backlog and status record. Work on one task at a time, nor
 - **Relevant files:** Go test files, `Makefile`, `scripts/check.sh`, `.github/workflows/ci.yml`
 - **Dependencies:** TD-002
 
+### TD-026 — Configure canonical GitHub repository metadata
+
+- **Description:** Replace the temporary repository, Go module, and code-owner values with the canonical private GitHub repository metadata while keeping the unresolved security contact explicitly marked.
+- **Acceptance criteria:** Repository links use `ArinF1/TraceDelta`; the Go module and imports use `github.com/ArinF1/TraceDelta`; `CODEOWNERS` assigns `@ArinF1`; the security email remains clearly blocked from public release; tests, vet, build, commit, and push succeed.
+- **Relevant files:** `go.mod`, Go imports, `README.md`, `CHANGELOG.md`, `CONTRIBUTING.md`, `.github/`, `docs/current-state.md`, `docs/session-log.md`
+- **Dependencies:** TD-001, TD-003
+
 ## Explicitly out of scope for v0.1
 
 ### TD-021 — Hosted trace database or service

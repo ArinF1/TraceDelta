@@ -4,7 +4,7 @@ import (
 	"reflect"
 	"testing"
 
-	"github.com/example/tracedelta/internal/model"
+	"github.com/ArinF1/TraceDelta/internal/model"
 )
 
 func TestSnapshotDropsNondeterministicFieldsAndNumbersOccurrences(t *testing.T) {

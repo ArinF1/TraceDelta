@@ -4,8 +4,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/example/tracedelta/internal/match"
-	"github.com/example/tracedelta/internal/model"
+	"github.com/ArinF1/TraceDelta/internal/match"
+	"github.com/ArinF1/TraceDelta/internal/model"
 )
 
 func TestCompareDetectsAddedAndRemovedSpans(t *testing.T) {

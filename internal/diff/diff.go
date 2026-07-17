@@ -7,7 +7,7 @@ import (
 	"sort"
 	"time"
 
-	"github.com/example/tracedelta/internal/match"
+	"github.com/ArinF1/TraceDelta/internal/match"
 )
 
 // Kind classifies a reported change.

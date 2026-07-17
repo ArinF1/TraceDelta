@@ -3,7 +3,7 @@ package match
 import (
 	"testing"
 
-	"github.com/example/tracedelta/internal/model"
+	"github.com/ArinF1/TraceDelta/internal/model"
 )
 
 func TestSpansPairsDuplicateKeysByOccurrence(t *testing.T) {

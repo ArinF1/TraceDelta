@@ -11,7 +11,7 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/example/tracedelta/pkg/tracedelta"
+	"github.com/ArinF1/TraceDelta/pkg/tracedelta"
 )
 
 const (

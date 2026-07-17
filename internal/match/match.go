@@ -1,7 +1,7 @@
 // Package match pairs normalized baseline and candidate spans.
 package match
 
-import "github.com/example/tracedelta/internal/model"
+import "github.com/ArinF1/TraceDelta/internal/model"
 
 // SpanPair contains two spans that share a stable key and occurrence number.
 type SpanPair struct {

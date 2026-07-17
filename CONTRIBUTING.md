@@ -20,12 +20,10 @@ For substantial proposals, open a feature request before investing in an impleme
 You need Go 1.26 or a compatible newer stable release, GNU Make for the convenience targets, and Bash for the repository scripts.
 
 ```bash
-git clone https://github.com/OWNER/REPO.git
+git clone https://github.com/ArinF1/TraceDelta.git
 cd TraceDelta
 make check
 ```
-
-`OWNER/REPO` is an intentional pre-publication placeholder; replace it with the canonical repository path before publishing.
 
 Run the synthetic comparison example with:
 

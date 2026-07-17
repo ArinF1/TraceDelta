@@ -5,7 +5,7 @@ package normalize
 import (
 	"sort"
 
-	"github.com/example/tracedelta/internal/model"
+	"github.com/ArinF1/TraceDelta/internal/model"
 )
 
 // Snapshot flattens a parsed snapshot in input order and assigns occurrence

@@ -1,3 +1,2 @@
-# REPLACE BEFORE PUBLISHING: change this placeholder to the real maintainer
-# account or team. The placeholder intentionally cannot assign real reviewers.
-* @REPLACE_OWNER/REPLACE_MAINTAINERS
+# The repository owner is the default reviewer for all changes.
+* @ArinF1
