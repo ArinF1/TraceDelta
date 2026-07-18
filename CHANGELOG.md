@@ -18,6 +18,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 - Replaced pre-publication repository, Go module, and code-owner placeholders with the canonical GitHub metadata.
 - Replaced the placeholder security contact with the monitored TraceDelta security mailbox.
+- Published the source repository with successful CI, security reporting, dependency/security monitoring, and an active default-branch ruleset.
 
 ### Limitations
 

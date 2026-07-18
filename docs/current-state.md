@@ -20,6 +20,7 @@ The repository uses Go 1.26, the newest stable Go version available when the pro
 - Unit tests exercise parsing, supported diff behavior, ordering, and CLI exit mapping.
 - Project documentation, local check entry points, and GitHub Actions CI configuration establish a maintainable repository baseline.
 - The security policy publishes the dedicated monitored contact `tracedelta.security@gmail.com` for private vulnerability reports.
+- The canonical GitHub repository is public, its `main` CI workflow is passing, and an active `main-protection` branch ruleset is configured.
 
 ## Intentionally not implemented
 
@@ -69,7 +70,9 @@ go mod verify
 
 Formatting was clean; all eight Go packages loaded successfully; normal and race-enabled tests passed; vet was clean; the CLI built; the standard-library-only module graph verified; and the built example produced the documented four findings and returned exactly `1`.
 
-`bash scripts/check.sh` was attempted, but this Windows Bash session resolved `find` incorrectly and stopped at `find: ‘gofmt’: No such file or directory`. The same formatting, test, vet, and build commands were run directly and passed. A private GitHub remote is configured; hosted CI status is not asserted by this local validation record.
+`bash scripts/check.sh` was attempted, but this Windows Bash session resolved `find` incorrectly and stopped at `find: ‘gofmt’: No such file or directory`. The same formatting, test, vet, and build commands were run directly and passed.
+
+On 2026-07-18, GitHub's public API independently confirmed that `ArinF1/TraceDelta` is public, uses `main` as its default branch, has the intended repository description, has a successful completed `CI` run on `main`, and has an active branch ruleset named `main-protection`. The maintainer confirmed that private vulnerability reporting, Dependabot alerts/security updates, secret scanning/push protection, pull-request and status-check enforcement, deletion protection, and force-push protection were enabled. Security-setting details that require repository administration access were not independently inspected. After the project-memory update, `gofmt` verification, `go test -count=1 ./...`, `go vet ./...`, and `git diff --check` passed.
 
 ## Next recommended task
 
