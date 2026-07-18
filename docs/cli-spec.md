@@ -39,13 +39,15 @@ The example fixtures contain differences, so this invocation is expected to exit
 
 | Flag | Required | Default | Current behavior |
 | --- | --- | --- | --- |
-| `--baseline PATH` | Yes | none | Reads the reference simplified OTLP-compatible JSON file. |
-| `--candidate PATH` | Yes | none | Reads the proposed simplified OTLP-compatible JSON file. |
+| `--baseline PATH` | Yes | none | Reads one reference file in the documented OTLP JSON subset. |
+| `--candidate PATH` | Yes | none | Reads one proposed file in the documented OTLP JSON subset. |
 | `--duration-threshold PERCENT` | No | `20%` | Reports candidate duration increases that meet the relative threshold. |
 | `--format FORMAT` | No | `text` | Supports `text` only. Any other value is an invalid invocation. |
 | `--output PATH` | No | empty | Recognized but currently rejected as not implemented; standard output is the only destination. |
 
 `--output PATH` is recognized but planned and not implemented in the initial slice. Passing a non-empty path returns a clear invalid-invocation error. Until output-file semantics are implemented, text is written to standard output and users may use normal shell redirection.
+
+Each input must contain exactly one JSON object. The accepted resource/scope/span fields, canonical numeric enums, primitive attribute forms, compatibility extensions, and explicit exclusions are documented in [`testdata/README.md`](../testdata/README.md). JSON Lines files containing multiple export records are not accepted yet.
 
 ### Duration threshold
 

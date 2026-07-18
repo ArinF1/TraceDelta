@@ -64,7 +64,7 @@ The v0.1 line should eventually:
 9. Operate entirely locally and be straightforward to invoke from generic CI.
 10. Include a documented GitHub Actions integration path without requiring a hosted TraceDelta service.
 
-The initial repository slice implements only simplified fixture parsing and a subset of structural/status/duration text findings. The remaining requirements stay open in [`tasks.md`](tasks.md).
+The current repository slice implements a documented OTLP JSON subset with primitive typed attributes, plus a subset of structural/status/duration text findings. Broader OTLP constructs, stronger normalization, semantic matching, and the remaining requirements stay open in [`tasks.md`](tasks.md).
 
 ## Future possibilities
 

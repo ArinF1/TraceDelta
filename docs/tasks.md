@@ -4,21 +4,14 @@ This is the execution backlog and status record. Work on one task at a time, nor
 
 ## Now
 
-### TD-004 — Expand OTLP JSON parsing
-
-- **Description:** Replace the simplified-only parser boundary with a strongly typed, documented subset of real OTLP JSON resource spans, scope spans, spans, statuses, and typed attributes while retaining the existing fixture as a compatibility case.
-- **Acceptance criteria:** Representative synthetic OTLP JSON parses into domain values; unknown safe fields are tolerated; malformed required fields and unsupported value forms produce contextual errors; parser tests cover empty, malformed, and nested inputs; supported/unsupported schema details are documented.
-- **Relevant files:** `internal/otlp/`, `internal/model/`, `testdata/`, `docs/architecture.md`, `docs/current-state.md`
-- **Dependencies:** TD-002, TD-003
-
-## Next
-
 ### TD-005 — Implement deterministic normalization
 
 - **Description:** Canonicalize nondeterministic IDs, timestamps, ordering, durations, and selected attributes without mutating parsed input.
 - **Acceptance criteria:** Equivalent traces with different generated IDs/timestamps normalize identically; parent relationships survive ID removal; duration tolerance is typed/configurable; repeated runs produce byte-equivalent normalized fixtures; boundary cases have tests.
 - **Relevant files:** `internal/normalize/`, `internal/model/`, `testdata/`, `docs/architecture.md`
 - **Dependencies:** TD-004
+
+## Next
 
 ### TD-006 — Match corresponding traces
 
@@ -149,6 +142,14 @@ This is the execution backlog and status record. Work on one task at a time, nor
 - **Acceptance criteria:** Parser/diff/order/exit behavior tests pass; `gofmt`, `go test ./...`, `go vet ./...`, and CLI build are checked; the example's expected difference exit is verified; CI has no release publishing.
 - **Relevant files:** Go test files, `Makefile`, `scripts/check.sh`, `.github/workflows/ci.yml`
 - **Dependencies:** TD-002
+
+### TD-004 — Expand OTLP JSON parsing
+
+- **Description:** Replace the simplified-only parser boundary with a strongly typed, documented subset of real OTLP JSON resource spans, scope spans, spans, statuses, and typed attributes while retaining the existing fixture as a compatibility case.
+- **Acceptance criteria:** Representative synthetic OTLP JSON parses into domain values; unknown safe fields are tolerated; malformed required fields and unsupported value forms produce contextual errors; parser tests cover empty, malformed, and nested inputs; supported/unsupported schema details are documented.
+- **Outcome:** Added canonical numeric enum support, exact string/number decoding for 64-bit values, primitive type-preserving attributes, resource/scope context, safe unknown-field tolerance, nonzero ID validation, a representative fixture, and contextual rejection of events, links, arrays, key-value lists, and invalid values. The original symbolic-enum fixtures remain compatible.
+- **Relevant files:** `internal/otlp/`, `internal/model/`, `internal/normalize/`, `testdata/`, `README.md`, `docs/architecture.md`, `docs/cli-spec.md`, `docs/current-state.md`
+- **Dependencies:** TD-002, TD-003
 
 ### TD-026 — Configure canonical GitHub repository metadata
 

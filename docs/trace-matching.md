@@ -4,7 +4,7 @@ Matching answers which baseline operation corresponds to which candidate operati
 
 ## Implemented now
 
-The initial vertical slice does **not** implement general trace matching. Its simplified fixtures are treated as one small comparison set. A span's current exact identity is the tuple of `service.name`, span name, normalized span kind, and its zero-based occurrence among otherwise identical keys in input order. This is sufficient to demonstrate added, removed, status, and duration findings, but it has important limits:
+The current vertical slice does **not** implement general trace matching. Parsed traces are flattened into one small comparison set. A span's current exact identity is the tuple of `service.name`, span name, normalized span kind, and its zero-based occurrence among otherwise identical keys in input order. This is sufficient to demonstrate added, removed, status, and duration findings, but it has important limits:
 
 - repeated spans with the same key cannot be matched semantically;
 - generated trace/span IDs do not establish cross-run identity;

@@ -2,7 +2,7 @@
 
 ## Purpose and current boundary
 
-TraceDelta is a local command-line program that compares two OpenTelemetry trace exports and produces an ordered set of behavioral findings. The intended pipeline is parse, normalize, match, diff, and report. The initial vertical slice implements the smallest useful form of that pipeline for synthetic, simplified OTLP-compatible JSON; sections below label behavior that is still proposed.
+TraceDelta is a local command-line program that compares two OpenTelemetry trace exports and produces an ordered set of behavioral findings. The intended pipeline is parse, normalize, match, diff, and report. The current vertical slice implements the smallest useful form of that pipeline for a documented OTLP JSON subset and retains the original synthetic inputs as compatibility fixtures; sections below label behavior that is still proposed.
 
 TraceDelta currently owns:
 
@@ -38,8 +38,8 @@ In the initial slice, normalization and trace matching are intentionally minimal
 
 - `cmd/tracedelta` owns process concerns: command/flag parsing, standard streams, and exit codes. It should contain no comparison rules.
 - `pkg/tracedelta` is the public orchestration boundary. It coordinates a comparison without exposing internal wire-format details.
-- `internal/model` contains typed domain values such as traces, spans, status, comparison results, and changes.
-- `internal/otlp` decodes supported JSON, validates required fields, and translates wire values into domain values.
+- `internal/model` contains typed domain values such as traces, spans, primitive attribute values, resource/scope context, status, comparison results, and changes.
+- `internal/otlp` decodes the supported OTLP JSON subset, validates required span fields, and translates wire values into domain values.
 - `internal/normalize` removes or buckets nondeterministic fields before matching. Its full policy is planned work.
 - `internal/match` establishes one-to-one trace and span correspondence and explains ambiguity. Semantic matching is planned work.
 - `internal/diff` produces typed findings from matched, added, and removed domain values. It owns threshold semantics, not formatting.
@@ -52,7 +52,7 @@ Internal packages are deliberate. The wire model and early matching rules will e
 The architecture revolves around a small set of concepts:
 
 - **Trace**: a related span tree plus resource context, especially service identity.
-- **Span**: a named operation with kind, status, duration, parent relationship, and typed attributes relevant to behavior.
+- **Span**: a named operation with kind, status, duration, parent relationship, resource/scope context, and typed primitive attributes relevant to behavior.
 - **Match**: an explicit baseline/candidate pair, or an unmatched item on either side, with the evidence used to decide it.
 - **Change**: a stable kind such as added, removed, status changed, or duration increased, plus before/after evidence.
 - **Comparison result**: ordered changes, summary counts, input labels, and enough policy information for every reporter and the exit decision.
@@ -61,9 +61,9 @@ Trace and span identifiers from an export are input correlation data, not stable
 
 ## Parse stage
 
-Parsing is strongly typed and fail-fast for unsupported or malformed input. Errors identify the input role (baseline or candidate), file operation, and failing field where practical. The simplified fixture schema is documented under `testdata/`.
+Parsing is strongly typed and fail-fast for unsupported or malformed input. The parser traverses resource spans, scope spans, and spans; preserves resource/scope context plus primitive string, Boolean, signed-integer, double, and bytes attribute types; accepts canonical numeric kind/status enums; and retains exact timestamp values. The original symbolic enum names remain a documented fixture-compatibility extension. Errors identify the input role (baseline or candidate), file operation, and failing field where practical.
 
-The stronger OTLP parser will need to traverse resource spans, scope spans, traces, and typed attribute values while retaining only data needed by later stages. Unknown fields should be tolerated when safe; invalid required fields should not be silently replaced with zero values.
+OTLP JSON requires receivers to ignore unknown message fields, so safe unknown fields are tolerated at every decoded level. Required span IDs, names, and timestamps are validated rather than replaced with zero values, and trace/span IDs must have the correct nonzero hexadecimal form. Non-empty events and links, nested array/key-value-list attributes, and multiple JSON/JSONL records remain explicit subset errors. The exact supported and unsupported forms are documented under `testdata/`; broader producer compatibility remains planned.
 
 ## Normalization stage
 

@@ -43,12 +43,15 @@ func Snapshot(input model.Snapshot) model.NormalizedSnapshot {
 	return result
 }
 
-func cloneAttributes(attributes map[string]string) map[string]string {
+func cloneAttributes(attributes model.Attributes) model.Attributes {
 	if attributes == nil {
 		return nil
 	}
-	clone := make(map[string]string, len(attributes))
+	clone := make(model.Attributes, len(attributes))
 	for key, value := range attributes {
+		if value.BytesValue != nil {
+			value.BytesValue = append([]byte(nil), value.BytesValue...)
+		}
 		clone[key] = value
 	}
 	return clone
