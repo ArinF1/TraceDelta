@@ -62,4 +62,4 @@ TraceDelta does not protect a compromised machine, malicious Go toolchain, or al
 
 ## Responsible disclosure
 
-Report suspected vulnerabilities privately according to [`SECURITY.md`](../SECURITY.md). The repository intentionally uses `security@example.com` as a clearly marked placeholder; maintainers must replace it with a monitored private address before publication. Do not open a public issue containing exploit details, secrets, personal data, or sensitive traces.
+Report suspected vulnerabilities privately to `tracedelta.security@gmail.com` according to [`SECURITY.md`](../SECURITY.md). Do not open a public issue containing exploit details, secrets, personal data, or sensitive traces.

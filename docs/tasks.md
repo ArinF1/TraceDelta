@@ -152,10 +152,17 @@ This is the execution backlog and status record. Work on one task at a time, nor
 
 ### TD-026 — Configure canonical GitHub repository metadata
 
-- **Description:** Replace the temporary repository, Go module, and code-owner values with the canonical private GitHub repository metadata while keeping the unresolved security contact explicitly marked.
-- **Acceptance criteria:** Repository links use `ArinF1/TraceDelta`; the Go module and imports use `github.com/ArinF1/TraceDelta`; `CODEOWNERS` assigns `@ArinF1`; the security email remains clearly blocked from public release; tests, vet, build, commit, and push succeed.
+- **Description:** Replace the temporary repository, Go module, and code-owner values with the canonical private GitHub repository metadata while tracking the then-unresolved security contact separately.
+- **Acceptance criteria:** Repository links use `ArinF1/TraceDelta`; the Go module and imports use `github.com/ArinF1/TraceDelta`; `CODEOWNERS` assigns `@ArinF1`; the security contact is explicitly handed off to TD-027; tests, vet, build, commit, and push succeed.
 - **Relevant files:** `go.mod`, Go imports, `README.md`, `CHANGELOG.md`, `CONTRIBUTING.md`, `.github/`, `docs/current-state.md`, `docs/session-log.md`
 - **Dependencies:** TD-001, TD-003
+
+### TD-027 — Configure the monitored security contact
+
+- **Description:** Replace the pre-publication security-address placeholder with the dedicated monitored TraceDelta security mailbox.
+- **Acceptance criteria:** Active security and privacy documentation consistently names `tracedelta.security@gmail.com`; no active publication warning references the old placeholder; historical append-only records remain accurate; repository checks, commit, and push succeed.
+- **Relevant files:** `README.md`, `SECURITY.md`, `CHANGELOG.md`, `docs/privacy-and-security.md`, `docs/current-state.md`, `docs/session-log.md`
+- **Dependencies:** TD-001, TD-026
 
 ## Explicitly out of scope for v0.1
 

@@ -1,6 +1,6 @@
 # Current state
 
-Last updated: 2026-07-17
+Last updated: 2026-07-18
 
 ## Current version
 
@@ -19,6 +19,7 @@ The repository uses Go 1.26, the newest stable Go version available when the pro
 - Synthetic fixtures demonstrate one unchanged span, one added span, one removed span, one status change, and one meaningful duration increase.
 - Unit tests exercise parsing, supported diff behavior, ordering, and CLI exit mapping.
 - Project documentation, local check entry points, and GitHub Actions CI configuration establish a maintainable repository baseline.
+- The security policy publishes the dedicated monitored contact `tracedelta.security@gmail.com` for private vulnerability reports.
 
 ## Intentionally not implemented
 
@@ -54,22 +55,21 @@ The repository uses Go 1.26, the newest stable Go version available when the pro
 
 ## Latest validation record
 
-Revalidated on 2026-07-17 after configuring the canonical GitHub module path, using `go version go1.26.0 windows/amd64`:
+Revalidated on 2026-07-18 after configuring the monitored security contact, using Go 1.26 on Windows:
 
 ```bash
-gofmt -w <all Go files>
+gofmt -l <all Go files>
 go test -count=1 ./...
 go test -race -count=1 ./...
 go vet ./...
-go build -trimpath -o tracedelta.exe ./cmd/tracedelta
-bash scripts/check.sh
-go mod tidy
+go build -trimpath -o <temporary binary> ./cmd/tracedelta
 go mod verify
+<temporary binary> compare --baseline testdata/baseline.json --candidate testdata/candidate.json
 ```
 
-Formatting was clean; all eight Go packages loaded successfully (seven contain tests, with 16 top-level test functions total); normal and race-enabled tests passed; vet was clean; the CLI built; the shell check script passed; and the standard-library-only module graph verified. The built example produced the documented four findings and returned exactly `1`; comparing the baseline with itself returned `0`; and requesting unsupported JSON output returned `2`. The documented `go run` example also produced the expected report and wrapper exit `1`.
+Formatting was clean; all eight Go packages loaded successfully; normal and race-enabled tests passed; vet was clean; the CLI built; the standard-library-only module graph verified; and the built example produced the documented four findings and returned exactly `1`.
 
-GNU Make and a standalone YAML parser were not installed in the validation environment. The Makefile was reviewed, its underlying commands were run independently, and its shell-equivalent check passed. A private GitHub remote is configured; hosted CI status is not asserted by this local validation record.
+`bash scripts/check.sh` was attempted, but this Windows Bash session resolved `find` incorrectly and stopped at `find: ‘gofmt’: No such file or directory`. The same formatting, test, vet, and build commands were run directly and passed. A private GitHub remote is configured; hosted CI status is not asserted by this local validation record.
 
 ## Next recommended task
 

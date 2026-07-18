@@ -99,7 +99,7 @@ The current slice implements only the minimum of those stages needed for determi
 
 TraceDelta is experimental and has no stable release yet. `v0.1.0-dev` identifies the repository's current development line, not a published or compatibility-guaranteed release. Files under `docs/` distinguish current behavior from proposed behavior; incomplete features are tracked rather than implied.
 
-The canonical Go module path is `github.com/ArinF1/TraceDelta`. Before making the repository public, replace the clearly marked `security@example.com` contact with a monitored private address.
+The canonical Go module path is `github.com/ArinF1/TraceDelta`. Security reports should be sent privately to `tracedelta.security@gmail.com` as described in the [security policy](SECURITY.md).
 
 - [Roadmap](ROADMAP.md)
 - [Product specification](docs/product-spec.md)

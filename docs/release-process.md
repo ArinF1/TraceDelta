@@ -46,7 +46,7 @@ Record exact commands, toolchain version, and outcomes in `docs/current-state.md
 2. Move relevant `CHANGELOG.md` entries from **Unreleased** into a dated version section.
 3. Update version references and project state.
 4. Re-run readiness and verification from the exact release commit.
-5. Have another maintainer review the changelog, security placeholders, generated artifacts, and tag target.
+5. Have another maintainer review the changelog, security contact, generated artifacts, and tag target.
 6. Create a signed or annotated Git tag named `vX.Y.Z` from the reviewed commit.
 7. Push the tag and create a GitHub release whose notes are derived from the changelog.
 8. Verify downloadable artifacts/checksums if binary distribution has been separately implemented.

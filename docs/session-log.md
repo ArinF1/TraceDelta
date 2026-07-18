@@ -29,3 +29,11 @@ Use this shape:
 - **Decisions:** Keep `security@example.com` while the repository is private; it remains a documented blocker for public release.
 - **Validation:** `gofmt` clean; `go mod tidy` and `go mod verify` passed; normal and race-enabled tests passed across all eight packages; `go vet` clean; CLI build and `scripts/check.sh` passed; the example produced the expected four findings and exit code `1`.
 - **Next:** TD-004 — expand the OTLP JSON parser; replace the security contact before changing repository visibility to public.
+
+## 2026-07-18 — Configure monitored security contact
+
+- **Scope:** TD-027: replace the pre-publication security-address placeholder with the dedicated TraceDelta security mailbox.
+- **Outcome:** Updated the active README, security policy, privacy guidance, changelog, project state, and backlog to use `tracedelta.security@gmail.com`. Preserved the preceding append-only session entry because it accurately records the earlier placeholder state.
+- **Decisions:** Use a dedicated project mailbox rather than a maintainer's everyday personal address; keep private vulnerability reporting as an additional GitHub-hosted channel when the repository becomes public.
+- **Validation:** The pre-change `go test -count=1 ./...` baseline passed. After the documentation changes, `gofmt` verification, normal and race-enabled tests across all eight packages, `go vet ./...`, `go mod verify`, CLI build, and the example's expected exit code `1` all passed. `bash scripts/check.sh` was attempted but stopped because this Windows Bash session resolved `find` incorrectly (`find: ‘gofmt’: No such file or directory`); its underlying checks were run directly and passed.
+- **Next:** TD-004 — expand the OTLP JSON parser while preserving contextual errors and the compatibility fixture.

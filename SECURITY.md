@@ -1,8 +1,5 @@
 # Security Policy
 
-> [!IMPORTANT]
-> **Before publishing this repository, replace the placeholder address `security@example.com` with a monitored private security contact.**
-
 TraceDelta processes observability data, which may contain credentials, tokens, personal information, internal hostnames, SQL statements, or other sensitive values. Treat trace inputs and generated reports as sensitive unless you have verified otherwise.
 
 ## Supported versions
@@ -13,7 +10,7 @@ TraceDelta has no published stable release yet. Security fixes are currently mad
 
 Do not open a public issue or include sensitive trace data in a pull request.
 
-Send a private report to **security@example.com** (**placeholder; replace before publishing**). If the eventual repository host enables private vulnerability reporting, that channel may also be used.
+Send a private report to **tracedelta.security@gmail.com**. If the repository host enables private vulnerability reporting, that channel may also be used.
 
 Include, when available:
 
