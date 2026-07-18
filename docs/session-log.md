@@ -37,3 +37,11 @@ Use this shape:
 - **Decisions:** Use a dedicated project mailbox rather than a maintainer's everyday personal address; keep private vulnerability reporting as an additional GitHub-hosted channel when the repository becomes public.
 - **Validation:** The pre-change `go test -count=1 ./...` baseline passed. After the documentation changes, `gofmt` verification, normal and race-enabled tests across all eight packages, `go vet ./...`, `go mod verify`, CLI build, and the example's expected exit code `1` all passed. `bash scripts/check.sh` was attempted but stopped because this Windows Bash session resolved `find` incorrectly (`find: ‘gofmt’: No such file or directory`); its underlying checks were run directly and passed.
 - **Next:** TD-004 — expand the OTLP JSON parser while preserving contextual errors and the compatibility fixture.
+
+## 2026-07-18 — Publish and harden the GitHub repository
+
+- **Scope:** TD-028: record the public repository and its initial GitHub security and branch-governance configuration.
+- **Outcome:** Published `ArinF1/TraceDelta`, retained the experimental `v0.1.0-dev` status without creating a release, enabled the planned public-project safeguards, and updated the existing project-memory files rather than adding a redundant memory document.
+- **Decisions:** Keep `AGENTS.md`, current state, backlog, ADRs, and the append-only session log as the complete handoff system. Require pull requests and the existing CI check on `main`, but require zero human approvals while there is only one maintainer.
+- **Validation:** Pre-change and post-change `go test -count=1 ./...` passed across all eight packages; post-change `go vet ./...`, `gofmt` verification, and `git diff --check` also passed. GitHub's public API confirmed public visibility, default branch `main`, the intended description, a successful completed `CI` run on `main`, and the active `main-protection` branch ruleset. The maintainer confirmed the administrative security toggles and detailed ruleset options; those access-controlled settings were not independently inspected.
+- **Next:** TD-004 — expand the OTLP JSON parser while preserving contextual errors and the compatibility fixture.

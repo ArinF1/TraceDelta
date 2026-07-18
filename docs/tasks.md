@@ -164,6 +164,13 @@ This is the execution backlog and status record. Work on one task at a time, nor
 - **Relevant files:** `README.md`, `SECURITY.md`, `CHANGELOG.md`, `docs/privacy-and-security.md`, `docs/current-state.md`, `docs/session-log.md`
 - **Dependencies:** TD-001, TD-026
 
+### TD-028 — Publish and harden the GitHub repository
+
+- **Description:** Publish the canonical repository and configure the minimum public-project security, CI, metadata, and default-branch controls.
+- **Acceptance criteria:** GitHub publicly exposes `ArinF1/TraceDelta`; the repository description is accurate; CI succeeds on `main`; an active `main-protection` ruleset requires pull requests and CI while blocking deletion and force pushes; private vulnerability reporting, Dependabot security features, secret scanning, and push protection are enabled; project memory records the publication state without inventing a release.
+- **Relevant files:** GitHub repository settings, `.github/workflows/ci.yml`, `CHANGELOG.md`, `docs/current-state.md`, `docs/session-log.md`
+- **Dependencies:** TD-026, TD-027
+
 ## Explicitly out of scope for v0.1
 
 ### TD-021 — Hosted trace database or service
