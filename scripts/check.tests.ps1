@@ -17,6 +17,26 @@ try {
     $probeDirectory = Join-Path $testRoot 'probe files'
     $null = New-Item -ItemType Directory -Path $probeDirectory -Force
 
+    Write-Output 'Testing duplicate application resolution...'
+    $firstApplicationDirectory = Join-Path $testRoot 'first application path'
+    $secondApplicationDirectory = Join-Path $testRoot 'second application path'
+    $null = New-Item -ItemType Directory -Path $firstApplicationDirectory, $secondApplicationDirectory
+    $probeApplicationName = 'tracedelta-resolution-probe.exe'
+    $firstApplication = Join-Path $firstApplicationDirectory $probeApplicationName
+    $secondApplication = Join-Path $secondApplicationDirectory $probeApplicationName
+    $null = New-Item -ItemType File -Path $firstApplication, $secondApplication
+    $originalPath = $env:Path
+    try {
+        $env:Path = "$firstApplicationDirectory;$secondApplicationDirectory;$originalPath"
+        $resolvedApplication = Resolve-TraceDeltaApplicationPath -Name $probeApplicationName
+        if (-not $resolvedApplication.Equals($firstApplication, [System.StringComparison]::OrdinalIgnoreCase)) {
+            throw "application resolution selected $resolvedApplication instead of the first PATH match $firstApplication."
+        }
+    }
+    finally {
+        $env:Path = $originalPath
+    }
+
     Write-Output 'Testing successful child process...'
     $success = Invoke-TraceDeltaBoundedProcess `
         -StepName 'success probe' `

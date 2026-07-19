@@ -24,9 +24,9 @@ try {
     $validationDirectory = Join-Path (Join-Path $repositoryRoot 'tmp') $runName
     $null = New-Item -ItemType Directory -Path $validationDirectory -Force
 
-    $go = (Get-Command go -CommandType Application -ErrorAction Stop).Source
-    $gofmt = (Get-Command gofmt -CommandType Application -ErrorAction Stop).Source
-    $git = (Get-Command git -CommandType Application -ErrorAction Stop).Source
+    $go = Resolve-TraceDeltaApplicationPath -Name 'go'
+    $gofmt = Resolve-TraceDeltaApplicationPath -Name 'gofmt'
+    $git = Resolve-TraceDeltaApplicationPath -Name 'git'
 
     Write-Output 'Checking gofmt...'
     $goFiles = @(& $git -c "safe.directory=$repositoryRoot" -C $repositoryRoot ls-files --cached --others --exclude-standard -- '*.go')

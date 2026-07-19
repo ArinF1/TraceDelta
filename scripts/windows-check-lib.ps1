@@ -192,6 +192,20 @@ function ConvertTo-TraceDeltaProcessArgument {
     return $result.ToString()
 }
 
+function Resolve-TraceDeltaApplicationPath {
+    [OutputType([string])]
+    param(
+        [Parameter(Mandatory = $true)]
+        [string]$Name
+    )
+
+    $commands = @(Get-Command $Name -CommandType Application -ErrorAction Stop)
+    if ($commands.Count -eq 0) {
+        throw "could not resolve required application $Name."
+    }
+    return $commands[0].Source
+}
+
 function Stop-TraceDeltaProcessTree {
     [OutputType([bool])]
     param(
