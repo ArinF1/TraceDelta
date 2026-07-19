@@ -15,6 +15,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 - A representative canonical OTLP JSON fixture covering resource/scope context, numeric enums, exact 64-bit values, and primitive typed attributes.
 - Paired synthetic normalization fixtures covering regenerated IDs, shifted clocks, reordered input, parent relationships, and explicit duration buckets.
 - Local verification commands and GitHub Actions continuous integration configuration.
+- A bounded Windows PowerShell validation entry point with serial Go checks, overlap prevention, process-tree cleanup, focused watchdog tests, and Windows CI coverage.
 
 ### Changed
 

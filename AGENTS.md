@@ -31,6 +31,13 @@ This file is the persistent working agreement for coding agents contributing to 
 - Do not add a `TODO` comment without a corresponding TraceDelta task ID, for example `TODO(TD-014)`.
 - Leave the repository buildable and testable.
 
+## Windows validation
+
+- Use `.\scripts\check.ps1` as the repository-native Windows formatting, test, vet, and build entry point. Run `scripts/check.tests.ps1` after changing its watchdog behavior.
+- Let the script run Go checks serially with the normal shared Go cache; do not place required Go validation commands in a parallel command batch or replace `GOCACHE` with a disposable cache.
+- The script's repository mutex and per-command watchdog are validation failures when they trigger; report their final messages exactly.
+- If an automation client returns a still-running command-cell identifier after its polling window, resume that same cell with the client's wait operation. The yield itself is not evidence that the displayed child command is hung.
+
 ## Required end-of-session checklist
 
 Before ending a session, complete every applicable item:

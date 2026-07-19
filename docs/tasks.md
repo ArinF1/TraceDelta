@@ -152,6 +152,14 @@ This is the execution backlog and status record. Work on one task at a time, nor
 - **Relevant files:** `internal/normalize/`, `internal/model/`, `internal/match/`, `pkg/tracedelta/`, `testdata/`, `README.md`, `docs/architecture.md`, `docs/trace-matching.md`, `docs/cli-spec.md`, `docs/current-state.md`
 - **Dependencies:** TD-004
 
+### TD-029 — Add bounded native Windows validation
+
+- **Description:** Provide a repository-native Windows verification entry point that runs required checks serially with bounded child-process waits, while documenting how automation must resume yielded command cells instead of misreporting them as hung Go commands.
+- **Acceptance criteria:** A PowerShell check script runs formatting, tests, vet, and build serially from any working directory; it uses the normal shared Go cache, applies a configurable positive timeout to each Go command, reports child failures/timeouts contextually, cleans temporary build output, and leaves no spawned child running after a timeout; tests exercise successful, failing, and timed-out child processes; Windows development and agent guidance distinguish an orchestration yield from a process hang; the exact nested `go vet ./...` invocation and the new check entry point complete successfully; existing repository validation remains green.
+- **Outcome:** Added a PowerShell 5.1 check entry point with serial formatting, test, vet, and build steps; a repository mutex; configurable per-command bounds; gated kill-on-close Windows Job Objects that prove the full process tree is empty before timeout cleanup succeeds; normal shared-cache behavior; contextual failures; temporary-build cleanup; focused success, failure, start-gate, timeout-tree, path, and lock tests; and a least-privilege Windows CI job. Corrected the prior diagnosis: yielded automation cells require their wait operation and do not by themselves show a hung Go process.
+- **Relevant files:** `scripts/`, `.github/workflows/ci.yml`, `AGENTS.md`, `README.md`, `CHANGELOG.md`, `docs/development.md`, `docs/current-state.md`, `docs/session-log.md`
+- **Dependencies:** TD-003
+
 ### TD-026 — Configure canonical GitHub repository metadata
 
 - **Description:** Replace the temporary repository, Go module, and code-owner values with the canonical private GitHub repository metadata while tracking the then-unresolved security contact separately.

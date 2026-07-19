@@ -5,7 +5,8 @@
 - Go 1.26, which was the newest stable toolchain used when the repository was initialized.
 - Git.
 - GNU Make for the documented convenience targets.
-- Bash for `scripts/check.sh` (the underlying Go commands also work directly on Windows).
+- Bash for `scripts/check.sh` on Unix-like systems.
+- Windows PowerShell 5.1 for the bounded native `scripts/check.ps1` entry point on Windows.
 
 TraceDelta deliberately has no database, container stack, frontend toolchain, or external service dependency.
 
@@ -42,6 +43,16 @@ The default Make target prints help.
 
 `./scripts/check.sh` is the shell equivalent used to keep essential local checks aligned with CI.
 
+On Windows, run the equivalent native check from any working directory:
+
+```powershell
+& "C:\path\to\TraceDelta\scripts\check.ps1"
+```
+
+The Windows script runs formatting verification, tests, vet, and build serially. It uses the normal shared Go cache, rejects overlapping checks for the same repository, removes its temporary executable, and defaults to a 300-second timeout for each Go command. Use `-CommandTimeoutSeconds <seconds>` only when a different positive bound is intentional. Changes to the watchdog itself must also pass `scripts/check.tests.ps1`.
+
+Some automation clients yield a still-running command cell after their polling window and return a cell identifier. Resume that same cell with the client's wait operation and use its final exit result; a yielded cell alone does not show that `go vet` or another child process is hung.
+
 ## Repository map
 
 - `cmd/tracedelta/`: process entry point and CLI adaptation.
@@ -61,7 +72,7 @@ Read [`../AGENTS.md`](../AGENTS.md) before making changes. It defines the requir
 3. Choose one task from [`tasks.md`](tasks.md), normally the first unblocked item in **Now**.
 4. Make the smallest coherent change that meets its acceptance criteria.
 5. Add tests that fail without the behavioral change.
-6. Run focused tests while iterating, then the full repository checks.
+6. Run focused tests while iterating, then the full repository checks (`./scripts/check.sh` or `.\scripts\check.ps1` for the host platform).
 7. Update public documentation and project-state files.
 8. Review `git diff` and `git status` for accidental files or sensitive data.
 9. Append a session-log entry.
