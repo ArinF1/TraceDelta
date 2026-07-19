@@ -1,0 +1,118 @@
+{
+  "resourceSpans": [
+    {
+      "resource": {
+        "attributes": [
+          {
+            "key": "service.name",
+            "value": {
+              "stringValue": "checkout-service",
+              "futureValueMetadata": "ignored"
+            },
+            "futureKeyValueMetadata": true
+          },
+          {
+            "key": "service.instance.id",
+            "value": {
+              "stringValue": "synthetic-instance"
+            }
+          }
+        ],
+        "droppedAttributesCount": "1",
+        "futureResourceField": "ignored"
+      },
+      "scopeSpans": [
+        {
+          "scope": {
+            "name": "example.instrumentation",
+            "version": "1.2.3",
+            "attributes": [
+              {
+                "key": "scope.enabled",
+                "value": {
+                  "boolValue": true
+                }
+              }
+            ],
+            "droppedAttributesCount": 2,
+            "futureScopeField": false
+          },
+          "spans": [
+            {
+              "traceId": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+              "spanId": "1111111111111111",
+              "traceState": "vendor=synthetic",
+              "flags": 1,
+              "name": "checkout.handle",
+              "kind": 2,
+              "startTimeUnixNano": "1700000000000000000",
+              "endTimeUnixNano": 1700000000125000000,
+              "attributes": [
+                {
+                  "key": "http.route",
+                  "value": {
+                    "stringValue": "/checkout"
+                  }
+                },
+                {
+                  "key": "feature.enabled",
+                  "value": {
+                    "boolValue": true
+                  }
+                },
+                {
+                  "key": "attempt.count",
+                  "value": {
+                    "intValue": "2"
+                  }
+                },
+                {
+                  "key": "sample.ratio",
+                  "value": {
+                    "doubleValue": 0.5
+                  }
+                },
+                {
+                  "key": "test.bytes",
+                  "value": {
+                    "bytesValue": "dHJhY2VkZWx0YQ=="
+                  }
+                }
+              ],
+              "droppedAttributesCount": 3,
+              "droppedEventsCount": 4,
+              "droppedLinksCount": 5,
+              "status": {
+                "code": 1,
+                "futureStatusField": "ignored"
+              },
+              "futureSpanField": {
+                "safeToIgnore": true
+              }
+            },
+            {
+              "traceId": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+              "spanId": "2222222222222222",
+              "parentSpanId": "1111111111111111",
+              "name": "payment.charge",
+              "kind": 3,
+              "startTimeUnixNano": "1700000000020000000",
+              "endTimeUnixNano": "1700000000100000000",
+              "status": {
+                "message": "synthetic decline",
+                "code": 2
+              }
+            }
+          ],
+          "schemaUrl": "https://opentelemetry.io/schemas/1.38.0",
+          "futureScopeSpansField": []
+        }
+      ],
+      "schemaUrl": "https://opentelemetry.io/schemas/1.38.0",
+      "futureResourceSpansField": 1
+    }
+  ],
+  "futureEnvelopeField": {
+    "ignored": true
+  }
+}

@@ -30,7 +30,7 @@ type Comparison = diff.Result
 // Change is one reportable behavioral change.
 type Change = diff.Change
 
-// Compare parses and compares two simplified OTLP JSON streams.
+// Compare parses and compares two streams in TraceDelta's documented OTLP JSON subset.
 func Compare(baseline, candidate io.Reader, options Options) (Comparison, error) {
 	baselineSnapshot, err := otlp.Parse(baseline)
 	if err != nil {
@@ -49,7 +49,7 @@ func Compare(baseline, candidate io.Reader, options Options) (Comparison, error)
 	return comparison, nil
 }
 
-// CompareFiles opens and compares two local simplified OTLP JSON files.
+// CompareFiles opens and compares two local files in the documented OTLP JSON subset.
 func CompareFiles(baselinePath, candidatePath string, options Options) (Comparison, error) {
 	baseline, err := os.Open(baselinePath)
 	if err != nil {

@@ -3,6 +3,50 @@ package model
 
 import "time"
 
+// AttributeValueType identifies the OTLP primitive stored in an attribute.
+type AttributeValueType string
+
+const (
+	// AttributeValueString is an OTLP stringValue.
+	AttributeValueString AttributeValueType = "string"
+	// AttributeValueBool is an OTLP boolValue.
+	AttributeValueBool AttributeValueType = "bool"
+	// AttributeValueInt is an OTLP intValue.
+	AttributeValueInt AttributeValueType = "int"
+	// AttributeValueDouble is an OTLP doubleValue.
+	AttributeValueDouble AttributeValueType = "double"
+	// AttributeValueBytes is an OTLP bytesValue.
+	AttributeValueBytes AttributeValueType = "bytes"
+)
+
+// AttributeValue preserves the type of one supported OTLP primitive value.
+// Exactly one value field is meaningful according to Type.
+type AttributeValue struct {
+	Type        AttributeValueType
+	StringValue string
+	BoolValue   bool
+	IntValue    int64
+	DoubleValue float64
+	BytesValue  []byte
+}
+
+// Attributes is a validated set of unique OTLP key/value attributes.
+type Attributes map[string]AttributeValue
+
+// Resource describes the resource context attached to a group of spans.
+type Resource struct {
+	Attributes             Attributes
+	DroppedAttributesCount uint32
+}
+
+// InstrumentationScope describes the scope that produced a group of spans.
+type InstrumentationScope struct {
+	Name                   string
+	Version                string
+	Attributes             Attributes
+	DroppedAttributesCount uint32
+}
+
 // StatusCode is the normalized OpenTelemetry status of a span.
 type StatusCode string
 
@@ -17,18 +61,27 @@ const (
 
 // Span is a parsed span before nondeterministic fields are removed.
 type Span struct {
-	TraceID       string
-	SpanID        string
-	ParentSpanID  string
-	Name          string
-	ServiceName   string
-	Kind          string
-	StartTime     uint64
-	Duration      time.Duration
-	Status        StatusCode
-	StatusMessage string
-	Attributes    map[string]string
-	InputOrder    int
+	TraceID                string
+	SpanID                 string
+	TraceState             string
+	ParentSpanID           string
+	Flags                  uint32
+	Name                   string
+	ServiceName            string
+	Kind                   string
+	StartTime              uint64
+	Duration               time.Duration
+	Status                 StatusCode
+	StatusMessage          string
+	Attributes             Attributes
+	DroppedAttributesCount uint32
+	DroppedEventsCount     uint32
+	DroppedLinksCount      uint32
+	Resource               Resource
+	ResourceSchemaURL      string
+	Scope                  InstrumentationScope
+	ScopeSchemaURL         string
+	InputOrder             int
 }
 
 // Trace groups spans that shared a trace ID in the input document.
@@ -57,7 +110,7 @@ type NormalizedSpan struct {
 	Duration      time.Duration
 	Status        StatusCode
 	StatusMessage string
-	Attributes    map[string]string
+	Attributes    Attributes
 }
 
 // NormalizedSnapshot is a flattened, deterministic comparison input.

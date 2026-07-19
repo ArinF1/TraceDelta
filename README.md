@@ -6,7 +6,7 @@
 [![CI](https://github.com/ArinF1/TraceDelta/actions/workflows/ci.yml/badge.svg)](https://github.com/ArinF1/TraceDelta/actions/workflows/ci.yml)
 
 > [!WARNING]
-> TraceDelta is early-stage software. The current implementation proves a small local comparison path; it is not yet a complete OTLP analyzer or a stable integration contract.
+> TraceDelta is early-stage software. The current implementation proves a small local comparison path over a documented OTLP JSON subset; it is not yet a complete OTLP analyzer or a stable integration contract.
 
 A source diff tells reviewers which lines changed. It does not tell them that checkout now writes an order before payment succeeds, calls inventory three times, drops a database predicate, or becomes materially slower. TraceDelta is being built to compare OpenTelemetry traces from a baseline and a candidate application version and report those runtime behavior changes directly.
 
@@ -36,21 +36,22 @@ Result: behavioral differences detected
 
 ## Current capabilities
 
-The initial vertical slice intentionally supports only a documented, simplified OTLP-compatible JSON shape. It can:
+The current vertical slice supports one documented, strongly typed subset of OTLP JSON while retaining the original synthetic fixtures as compatibility cases. It can:
 
 - read baseline and candidate files into strongly typed models;
-- reject malformed input with contextual errors;
+- parse resource spans, instrumentation scopes, spans, numeric OTLP kind/status enums, exact 64-bit timestamp forms, and primitive typed attributes;
+- ignore unknown message fields for forward compatibility while rejecting malformed required span fields and recognized unsupported structures with contextual errors;
 - remove generated trace/span IDs and absolute timestamps from the current flat comparison representation;
 - compare spans deterministically by the current stable matching key;
 - report added and removed spans, status changes, and duration increases meeting a percentage threshold;
 - render a deterministic terminal report; and
 - return exit code `0` for no meaningful differences, `1` for detected differences, and `2` for usage, file, or parse errors.
 
-The fixture shape and its current restrictions are documented in [`testdata/README.md`](testdata/README.md). This format is a stepping stone, not a claim of complete OTLP JSON support.
+The supported schema, compatibility extensions, and current exclusions are documented in [`testdata/README.md`](testdata/README.md). Non-empty events and links, nested array/key-value-list attributes, multiple JSON/JSONL records, and arbitrary exporter variants are not supported yet.
 
 ## Planned capabilities
 
-Version 0.1 is planned to add reliable OTLP JSON ingestion, stronger configurable normalization, trace and span matching, semantic service/database/error rules, JSON and standalone HTML reports, configurable regression thresholds, and a GitHub Actions-friendly workflow. See the [roadmap](ROADMAP.md) and [prioritized task backlog](docs/tasks.md) for the honest implementation state.
+Version 0.1 is planned to add broader OTLP JSON compatibility, stronger configurable normalization, trace and span matching, semantic service/database/error rules, JSON and standalone HTML reports, configurable regression thresholds, and a GitHub Actions-friendly workflow. See the [roadmap](ROADMAP.md) and [prioritized task backlog](docs/tasks.md) for the honest implementation state.
 
 ## Quick start
 

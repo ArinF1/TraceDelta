@@ -19,3 +19,14 @@ func TestCompareFilesExample(t *testing.T) {
 		t.Fatalf("len(changes) = %d, want 4", len(comparison.Changes))
 	}
 }
+
+func TestCompareFilesRepresentativeOTLPAgainstItself(t *testing.T) {
+	fixture := filepath.Join("..", "..", "testdata", "otlp-representative.json")
+	comparison, err := CompareFiles(fixture, fixture, DefaultOptions())
+	if err != nil {
+		t.Fatalf("CompareFiles() error = %v", err)
+	}
+	if comparison.HasDifferences() {
+		t.Fatalf("CompareFiles() comparison = %#v, want no differences", comparison)
+	}
+}
