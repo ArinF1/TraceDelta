@@ -2,7 +2,9 @@ package tracedelta
 
 import (
 	"path/filepath"
+	"strings"
 	"testing"
+	"time"
 )
 
 func TestCompareFilesExample(t *testing.T) {
@@ -28,5 +30,42 @@ func TestCompareFilesRepresentativeOTLPAgainstItself(t *testing.T) {
 	}
 	if comparison.HasDifferences() {
 		t.Fatalf("CompareFiles() comparison = %#v, want no differences", comparison)
+	}
+}
+
+func TestCompareFilesCanonicalizesEquivalentRuns(t *testing.T) {
+	baseline := filepath.Join("..", "..", "testdata", "normalize-run-b.json")
+	candidate := filepath.Join("..", "..", "testdata", "normalize-run-a.json")
+	exactOptions := DefaultOptions()
+	exactOptions.DurationThreshold = 0
+
+	exactComparison, err := CompareFiles(baseline, candidate, exactOptions)
+	if err != nil {
+		t.Fatalf("CompareFiles(exact durations) error = %v", err)
+	}
+	if !exactComparison.HasDifferences() {
+		t.Fatal("CompareFiles(exact durations) found no differences, want duration noise before bucketing")
+	}
+
+	bucketedOptions := exactOptions
+	bucketedOptions.Normalization.DurationBucket = 10 * time.Nanosecond
+
+	comparison, err := CompareFiles(baseline, candidate, bucketedOptions)
+	if err != nil {
+		t.Fatalf("CompareFiles(bucketed durations) error = %v", err)
+	}
+	if comparison.HasDifferences() {
+		t.Fatalf("CompareFiles(bucketed durations) comparison = %#v, want no differences", comparison)
+	}
+}
+
+func TestCompareFilesRejectsNegativeNormalizationDurationBucket(t *testing.T) {
+	fixture := filepath.Join("..", "..", "testdata", "otlp-representative.json")
+	options := DefaultOptions()
+	options.Normalization.DurationBucket = -time.Nanosecond
+
+	_, err := CompareFiles(fixture, fixture, options)
+	if err == nil || !strings.Contains(err.Error(), "normalize baseline traces: duration bucket must be non-negative") {
+		t.Fatalf("CompareFiles() error = %v, want contextual negative duration-bucket error", err)
 	}
 }

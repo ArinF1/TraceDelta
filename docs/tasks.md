@@ -4,21 +4,14 @@ This is the execution backlog and status record. Work on one task at a time, nor
 
 ## Now
 
-### TD-005 — Implement deterministic normalization
-
-- **Description:** Canonicalize nondeterministic IDs, timestamps, ordering, durations, and selected attributes without mutating parsed input.
-- **Acceptance criteria:** Equivalent traces with different generated IDs/timestamps normalize identically; parent relationships survive ID removal; duration tolerance is typed/configurable; repeated runs produce byte-equivalent normalized fixtures; boundary cases have tests.
-- **Relevant files:** `internal/normalize/`, `internal/model/`, `testdata/`, `docs/architecture.md`
-- **Dependencies:** TD-004
-
-## Next
-
 ### TD-006 — Match corresponding traces
 
 - **Description:** Pair baseline and candidate traces using normalized root operation, service, kind, route, stable attributes, and deterministic occurrence handling.
 - **Acceptance criteria:** Unambiguous trace pairs, added/removed traces, repeated trace operations, reordered input, and ambiguous candidates are tested; raw generated IDs are not cross-run identity; every match records explainable evidence.
 - **Relevant files:** `internal/match/`, `internal/model/`, `docs/trace-matching.md`, `testdata/`
 - **Dependencies:** TD-005
+
+## Next
 
 ### TD-007 — Match spans structurally and semantically
 
@@ -150,6 +143,14 @@ This is the execution backlog and status record. Work on one task at a time, nor
 - **Outcome:** Added canonical numeric enum support, exact string/number decoding for 64-bit values, primitive type-preserving attributes, resource/scope context, safe unknown-field tolerance, nonzero ID validation, a representative fixture, and contextual rejection of events, links, arrays, key-value lists, and invalid values. The original symbolic-enum fixtures remain compatible.
 - **Relevant files:** `internal/otlp/`, `internal/model/`, `internal/normalize/`, `testdata/`, `README.md`, `docs/architecture.md`, `docs/cli-spec.md`, `docs/current-state.md`
 - **Dependencies:** TD-002, TD-003
+
+### TD-005 — Implement deterministic normalization
+
+- **Description:** Canonicalize nondeterministic IDs, timestamps, ordering, durations, and selected attributes without mutating parsed input.
+- **Acceptance criteria:** Equivalent traces with different generated IDs/timestamps normalize identically; parent relationships survive ID removal; duration tolerance is typed/configurable; repeated runs produce byte-equivalent normalized fixtures; boundary cases have tests.
+- **Outcome:** Added a trace-preserving canonical model with root/internal/external parent references, dense relative start ranks, structural ordering independent of input arrays and raw IDs, a non-negative typed duration bucket, and a sorted typed projection of selected HTTP/RPC attributes. Paired fixtures and unit/integration tests demonstrate byte-equivalent repeated runs, non-mutation, malformed-parent handling, boundary behavior, and unchanged comparison compatibility.
+- **Relevant files:** `internal/normalize/`, `internal/model/`, `internal/match/`, `pkg/tracedelta/`, `testdata/`, `README.md`, `docs/architecture.md`, `docs/trace-matching.md`, `docs/cli-spec.md`, `docs/current-state.md`
+- **Dependencies:** TD-004
 
 ### TD-026 — Configure canonical GitHub repository metadata
 

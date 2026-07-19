@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"time"
 
 	"github.com/ArinF1/TraceDelta/internal/diff"
 	"github.com/ArinF1/TraceDelta/internal/match"
@@ -13,10 +14,20 @@ import (
 	"github.com/ArinF1/TraceDelta/internal/report"
 )
 
+// NormalizationOptions controls the deterministic projection applied before
+// matching.
+type NormalizationOptions struct {
+	// DurationBucket floors span durations to this width. Zero preserves exact
+	// durations. This is separate from the relative regression threshold.
+	DurationBucket time.Duration
+}
+
 // Options controls comparison behavior.
 type Options struct {
 	// DurationThreshold is a relative ratio, where 0.20 means a 20% increase.
 	DurationThreshold float64
+	// Normalization controls deterministic pre-match normalization.
+	Normalization NormalizationOptions
 }
 
 // DefaultOptions returns the documented initial comparison defaults.
@@ -41,7 +52,17 @@ func Compare(baseline, candidate io.Reader, options Options) (Comparison, error)
 		return Comparison{}, fmt.Errorf("parse candidate traces: %w", err)
 	}
 
-	matches := match.Spans(normalize.Snapshot(baselineSnapshot), normalize.Snapshot(candidateSnapshot))
+	normalizationOptions := normalize.Options{DurationBucket: options.Normalization.DurationBucket}
+	normalizedBaseline, err := normalize.Snapshot(baselineSnapshot, normalizationOptions)
+	if err != nil {
+		return Comparison{}, fmt.Errorf("normalize baseline traces: %w", err)
+	}
+	normalizedCandidate, err := normalize.Snapshot(candidateSnapshot, normalizationOptions)
+	if err != nil {
+		return Comparison{}, fmt.Errorf("normalize candidate traces: %w", err)
+	}
+
+	matches := match.Spans(normalizedBaseline, normalizedCandidate)
 	comparison, err := diff.Compare(matches, diff.Options{DurationThreshold: options.DurationThreshold})
 	if err != nil {
 		return Comparison{}, fmt.Errorf("compare traces: %w", err)

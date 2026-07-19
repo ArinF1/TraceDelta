@@ -24,14 +24,16 @@ type identity struct {
 // Spans matches on service name, span name, kind, and occurrence order. It
 // intentionally does not use trace IDs, span IDs, or timestamps.
 func Spans(baseline, candidate model.NormalizedSnapshot) Result {
-	candidateIndexes := make(map[identity]int, len(candidate.Spans))
-	for index, span := range candidate.Spans {
+	baselineSpans := flattenSpans(baseline)
+	candidateSpans := flattenSpans(candidate)
+	candidateIndexes := make(map[identity]int, len(candidateSpans))
+	for index, span := range candidateSpans {
 		candidateIndexes[spanIdentity(span)] = index
 	}
 
-	usedCandidates := make([]bool, len(candidate.Spans))
+	usedCandidates := make([]bool, len(candidateSpans))
 	result := Result{}
-	for _, baselineSpan := range baseline.Spans {
+	for _, baselineSpan := range baselineSpans {
 		candidateIndex, ok := candidateIndexes[spanIdentity(baselineSpan)]
 		if !ok {
 			result.Removed = append(result.Removed, baselineSpan)
@@ -40,11 +42,11 @@ func Spans(baseline, candidate model.NormalizedSnapshot) Result {
 		usedCandidates[candidateIndex] = true
 		result.Paired = append(result.Paired, SpanPair{
 			Baseline:  baselineSpan,
-			Candidate: candidate.Spans[candidateIndex],
+			Candidate: candidateSpans[candidateIndex],
 		})
 	}
 
-	for index, candidateSpan := range candidate.Spans {
+	for index, candidateSpan := range candidateSpans {
 		if !usedCandidates[index] {
 			result.Added = append(result.Added, candidateSpan)
 		}
@@ -54,4 +56,16 @@ func Spans(baseline, candidate model.NormalizedSnapshot) Result {
 
 func spanIdentity(span model.NormalizedSpan) identity {
 	return identity{key: span.Key, occurrence: span.Occurrence}
+}
+
+func flattenSpans(snapshot model.NormalizedSnapshot) []model.NormalizedSpan {
+	count := 0
+	for _, trace := range snapshot.Traces {
+		count += len(trace.Spans)
+	}
+	spans := make([]model.NormalizedSpan, 0, count)
+	for _, trace := range snapshot.Traces {
+		spans = append(spans, trace.Spans...)
+	}
+	return spans
 }

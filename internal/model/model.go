@@ -102,18 +102,55 @@ type SpanKey struct {
 	Kind        string
 }
 
-// NormalizedSpan contains the deterministic fields used for comparison.
-// Occurrence disambiguates otherwise-identical span keys by input order.
-type NormalizedSpan struct {
-	Key           SpanKey
-	Occurrence    int
-	Duration      time.Duration
-	Status        StatusCode
-	StatusMessage string
-	Attributes    Attributes
+// ParentKind identifies how a normalized span relates to its parent after raw
+// span identifiers have been removed.
+type ParentKind string
+
+const (
+	// ParentRoot identifies a span with no parent in the source trace.
+	ParentRoot ParentKind = "root"
+	// ParentSpan identifies a parent present in the same normalized trace.
+	ParentSpan ParentKind = "span"
+	// ParentExternal identifies a parent omitted from a partial export.
+	ParentExternal ParentKind = "external"
+)
+
+// ParentReference preserves a span's relationship without retaining its raw
+// parent span identifier. SpanIndex is meaningful only when Kind is ParentSpan.
+type ParentReference struct {
+	Kind      ParentKind
+	SpanIndex int
 }
 
-// NormalizedSnapshot is a flattened, deterministic comparison input.
-type NormalizedSnapshot struct {
+// NormalizedAttribute is a sorted, typed attribute projection with a canonical
+// scalar representation.
+type NormalizedAttribute struct {
+	Key   string
+	Type  AttributeValueType
+	Value string
+}
+
+// NormalizedSpan contains deterministic fields used for comparison.
+// Occurrence remains global to a snapshot for compatibility with the initial
+// flat span matcher. StartOrder is a dense rank within one trace; equal source
+// timestamps share a rank.
+type NormalizedSpan struct {
+	Key        SpanKey
+	Occurrence int
+	Parent     ParentReference
+	StartOrder int
+	Duration   time.Duration
+	Status     StatusCode
+	Attributes []NormalizedAttribute
+}
+
+// NormalizedTrace is one trace after raw identifiers and absolute timestamps
+// have been replaced with deterministic local structure.
+type NormalizedTrace struct {
 	Spans []NormalizedSpan
+}
+
+// NormalizedSnapshot is a trace-preserving deterministic comparison input.
+type NormalizedSnapshot struct {
+	Traces []NormalizedTrace
 }

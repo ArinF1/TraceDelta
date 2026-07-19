@@ -4,11 +4,11 @@ Matching answers which baseline operation corresponds to which candidate operati
 
 ## Implemented now
 
-The current vertical slice does **not** implement general trace matching. Parsed traces are flattened into one small comparison set. A span's current exact identity is the tuple of `service.name`, span name, normalized span kind, and its zero-based occurrence among otherwise identical keys in input order. This is sufficient to demonstrate added, removed, status, and duration findings, but it has important limits:
+The current vertical slice does **not** implement general trace matching. Normalization now preserves canonical trace boundaries and parent references, but the temporary matcher flattens those traces into one comparison set. A span's current exact identity is the tuple of `service.name`, span name, normalized span kind, and its zero-based occurrence among otherwise identical keys in canonical normalized order. This is sufficient to demonstrate added, removed, status, and duration findings, but it has important limits:
 
 - repeated spans with the same key cannot be matched semantically;
 - generated trace/span IDs do not establish cross-run identity;
-- service/resource and parent-child context are not yet scored; and
+- preserved parent-child and trace context are not yet scored; and
 - similar traces from repeated scenarios are not paired.
 
 These assumptions must not be described as complete OTLP matching.
