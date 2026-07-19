@@ -1,0 +1,70 @@
+{
+  "resourceSpans": [
+    {
+      "resource": {
+        "attributes": [
+          {
+            "key": "service.name",
+            "value": { "stringValue": "checkout-service" }
+          }
+        ]
+      },
+      "scopeSpans": [
+        {
+          "scope": { "name": "tracedelta-normalization" },
+          "spans": [
+            {
+              "traceId": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+              "spanId": "1111111111111111",
+              "name": "checkout.handle",
+              "kind": 2,
+              "startTimeUnixNano": "1000",
+              "endTimeUnixNano": "1109",
+              "attributes": [
+                {
+                  "key": "http.request.method",
+                  "value": { "stringValue": "POST" }
+                },
+                {
+                  "key": "http.route",
+                  "value": { "stringValue": "/checkout" }
+                },
+                {
+                  "key": "request.id",
+                  "value": { "stringValue": "synthetic-run-a" }
+                }
+              ]
+            },
+            {
+              "traceId": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+              "spanId": "2222222222222222",
+              "parentSpanId": "1111111111111111",
+              "name": "payment.charge",
+              "kind": 3,
+              "startTimeUnixNano": "1020",
+              "endTimeUnixNano": "1084",
+              "attributes": [
+                {
+                  "key": "rpc.service",
+                  "value": { "stringValue": "payments.v1.PaymentService" }
+                },
+                {
+                  "key": "rpc.method",
+                  "value": { "stringValue": "Charge" }
+                }
+              ]
+            },
+            {
+              "traceId": "cccccccccccccccccccccccccccccccc",
+              "spanId": "3333333333333333",
+              "name": "health.check",
+              "kind": 2,
+              "startTimeUnixNano": "2000",
+              "endTimeUnixNano": "2020"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

@@ -32,7 +32,7 @@ flowchart LR
     R --> E["Exit policy"]
 ```
 
-In the initial slice, normalization and trace matching are intentionally minimal, and only text reporting is available. The package boundaries reserve the full flow so each stage can become more capable without coupling parsing to presentation.
+Normalization now produces a deterministic trace-preserving projection, while trace matching remains intentionally minimal and only text reporting is available. The package boundaries reserve the full flow so each stage can become more capable without coupling parsing to presentation.
 
 ## Package responsibilities
 
@@ -40,7 +40,7 @@ In the initial slice, normalization and trace matching are intentionally minimal
 - `pkg/tracedelta` is the public orchestration boundary. It coordinates a comparison without exposing internal wire-format details.
 - `internal/model` contains typed domain values such as traces, spans, primitive attribute values, resource/scope context, status, comparison results, and changes.
 - `internal/otlp` decodes the supported OTLP JSON subset, validates required span fields, and translates wire values into domain values.
-- `internal/normalize` removes or buckets nondeterministic fields before matching. Its full policy is planned work.
+- `internal/normalize` removes raw identifiers and absolute clocks, resolves parent relationships, canonicalizes trace/span order and selected typed attributes, and applies an explicit duration bucket before matching.
 - `internal/match` establishes one-to-one trace and span correspondence and explains ambiguity. Semantic matching is planned work.
 - `internal/diff` produces typed findings from matched, added, and removed domain values. It owns threshold semantics, not formatting.
 - `internal/report` turns a comparison result into deterministic output. Text is current; JSON and HTML are planned.
@@ -67,20 +67,21 @@ OTLP JSON requires receivers to ignore unknown message fields, so safe unknown f
 
 ## Normalization stage
 
-Normalization makes semantically equivalent runs comparable. The planned policy will:
+Normalization makes supported semantically equivalent runs comparable without changing the parsed snapshot. The current policy:
 
-- discard or replace trace and span IDs after relationships are resolved;
-- convert timestamps into relative ordering and duration information;
-- bucket durations using explicit tolerance;
-- canonicalize status and selected semantic-convention attributes;
-- retain parent-child structure while removing unstable identifiers; and
-- apply attribute allowlists, denylists, and future redaction before reportable evidence is created.
+- resolves each in-trace parent ID before removing all raw trace, span, and parent identifiers;
+- preserves parent state as root, a canonical local parent index, or an external parent missing from a partial export;
+- rejects self-parenting and parent cycles rather than constructing a misleading tree;
+- replaces absolute start timestamps with dense trace-local order ranks, where equal timestamps share a rank;
+- sorts sibling subtrees and traces by canonical structural encodings rather than JSON array order;
+- floors non-negative durations to an explicitly supplied `time.Duration` bucket, with zero meaning exact duration; and
+- projects `http.request.method`, `http.route`, `rpc.method`, and `rpc.service` into lexically sorted typed canonical scalar values.
 
-Normalization must be deterministic and non-mutating: the same parsed input and configuration must always produce the same value. The initial slice does not claim full nondeterministic-value normalization.
+The duration bucket is available through the typed Go orchestration options and defaults to zero, preserving the current CLI's exact-duration input to its separate relative regression threshold. Selected attributes form a stable matching projection only: parsed input still contains every supported attribute, and this is not filtering, redaction, or anonymization. User allowlists, denylist precedence, and early redaction remain TD-016. Repeated normalization is byte-equivalent for the tested normalized model, including non-finite doubles and bytes, and does not retain `InputOrder`, absolute clock values, or raw IDs.
 
 ## Matching stage
 
-Matching is a separate stage because correspondence is uncertain, while a diff assumes correspondence is known. The initial fixture comparison uses its documented exact stable span key and therefore assumes unambiguous synthetic inputs. It does not yet perform general trace matching.
+Matching is a separate stage because correspondence is uncertain, while a diff assumes correspondence is known. The current matcher temporarily flattens canonical normalized traces and uses the documented exact span key plus global canonical occurrence. It therefore still assumes unambiguous synthetic inputs and does not perform general trace matching or use parent structure as match evidence.
 
 The proposed matcher uses ordered signals and deterministic tie-breaking, records ambiguity instead of guessing, and never uses raw trace/span IDs as cross-run identity. See [`trace-matching.md`](trace-matching.md) for the full proposal.
 

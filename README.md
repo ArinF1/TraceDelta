@@ -41,7 +41,8 @@ The current vertical slice supports one documented, strongly typed subset of OTL
 - read baseline and candidate files into strongly typed models;
 - parse resource spans, instrumentation scopes, spans, numeric OTLP kind/status enums, exact 64-bit timestamp forms, and primitive typed attributes;
 - ignore unknown message fields for forward compatibility while rejecting malformed required span fields and recognized unsupported structures with contextual errors;
-- remove generated trace/span IDs and absolute timestamps from the current flat comparison representation;
+- replace generated IDs, absolute timestamps, and input-array order with a deterministic trace-preserving representation that retains root, internal-parent, and missing-external-parent relationships;
+- floor durations through an explicit typed embedding option (disabled by default) and canonically project selected HTTP/RPC attributes without mutating parsed input;
 - compare spans deterministically by the current stable matching key;
 - report added and removed spans, status changes, and duration increases meeting a percentage threshold;
 - render a deterministic terminal report; and
@@ -51,7 +52,7 @@ The supported schema, compatibility extensions, and current exclusions are docum
 
 ## Planned capabilities
 
-Version 0.1 is planned to add broader OTLP JSON compatibility, stronger configurable normalization, trace and span matching, semantic service/database/error rules, JSON and standalone HTML reports, configurable regression thresholds, and a GitHub Actions-friendly workflow. See the [roadmap](ROADMAP.md) and [prioritized task backlog](docs/tasks.md) for the honest implementation state.
+Version 0.1 is planned to add broader OTLP JSON compatibility, semantic trace and span matching, configurable filtering/redaction, service/database/error rules, JSON and standalone HTML reports, richer regression policy, and a GitHub Actions-friendly workflow. See the [roadmap](ROADMAP.md) and [prioritized task backlog](docs/tasks.md) for the honest implementation state.
 
 ## Quick start
 

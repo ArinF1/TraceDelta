@@ -8,6 +8,10 @@ They remain deliberately small compatibility cases and use symbolic enum names
 accepted by TraceDelta's first parser. `otlp-representative.json` exercises the
 canonical numeric enum encoding, resource and instrumentation-scope context,
 primitive typed attributes, exact 64-bit values, and safe unknown fields.
+`normalize-run-a.json` and `normalize-run-b.json` describe equivalent synthetic
+operations with regenerated IDs, shifted timestamps, reordered traces/spans and
+attributes, different unselected request IDs, and durations that share explicit
+10-nanosecond buckets.
 
 ## Supported document shape
 
@@ -108,3 +112,10 @@ contains:
 - removed `cache.get`;
 - `checkout.handle` status changing from `OK` to `ERROR`; and
 - `payment.charge` increasing from `120ms` to `245ms`.
+
+The two normalization fixtures are expected to produce byte-equivalent
+normalized snapshots only when the typed duration bucket is set to `10ns`.
+They prove the normalization contract rather than define a new accepted wire
+shape. Their `request.id` values deliberately differ and are not part of the
+fixed stable matching projection; parsed snapshots still retain those values,
+so this behavior must not be described as redaction or anonymization.

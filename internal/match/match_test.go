@@ -8,15 +8,15 @@ import (
 
 func TestSpansPairsDuplicateKeysByOccurrence(t *testing.T) {
 	key := model.SpanKey{ServiceName: "api", Name: "db.query", Kind: "SPAN_KIND_CLIENT"}
-	baseline := model.NormalizedSnapshot{Spans: []model.NormalizedSpan{
+	baseline := model.NormalizedSnapshot{Traces: []model.NormalizedTrace{{Spans: []model.NormalizedSpan{
 		{Key: key, Occurrence: 0},
 		{Key: key, Occurrence: 1},
-	}}
-	candidate := model.NormalizedSnapshot{Spans: []model.NormalizedSpan{
+	}}}}
+	candidate := model.NormalizedSnapshot{Traces: []model.NormalizedTrace{{Spans: []model.NormalizedSpan{
 		{Key: key, Occurrence: 0},
 		{Key: key, Occurrence: 1},
 		{Key: key, Occurrence: 2},
-	}}
+	}}}}
 
 	got := Spans(baseline, candidate)
 	if len(got.Paired) != 2 || len(got.Added) != 1 || len(got.Removed) != 0 {

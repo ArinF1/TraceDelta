@@ -55,6 +55,8 @@ The threshold is a percentage, written with a trailing `%`, such as `20%` or `12
 
 The current percentage-only policy is intentionally narrow. Absolute tolerances and combined policies remain planned because short spans can otherwise produce misleading percentages.
 
+The normalization stage also has a distinct typed duration bucket for Go embedding callers. It floors each duration to a non-negative `time.Duration` width before matching; zero disables bucketing and is the current default. The CLI does not yet expose this option, and `--duration-threshold` remains solely the relative finding threshold rather than a normalization setting.
+
 ### Output and ordering
 
 Successful comparison output is written to standard output. Usage, read, and parse diagnostics are written to standard error. The text report contains:

@@ -1,0 +1,70 @@
+{
+  "resourceSpans": [
+    {
+      "resource": {
+        "attributes": [
+          {
+            "key": "service.name",
+            "value": { "stringValue": "checkout-service" }
+          }
+        ]
+      },
+      "scopeSpans": [
+        {
+          "scope": { "name": "tracedelta-normalization" },
+          "spans": [
+            {
+              "traceId": "dddddddddddddddddddddddddddddddd",
+              "spanId": "bbbbbbbbbbbbbbbb",
+              "name": "health.check",
+              "kind": 2,
+              "startTimeUnixNano": "100000",
+              "endTimeUnixNano": "100020"
+            },
+            {
+              "traceId": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+              "spanId": "cccccccccccccccc",
+              "parentSpanId": "aaaaaaaaaaaaaaaa",
+              "name": "payment.charge",
+              "kind": 3,
+              "startTimeUnixNano": "900020",
+              "endTimeUnixNano": "900081",
+              "attributes": [
+                {
+                  "key": "rpc.method",
+                  "value": { "stringValue": "Charge" }
+                },
+                {
+                  "key": "rpc.service",
+                  "value": { "stringValue": "payments.v1.PaymentService" }
+                }
+              ]
+            },
+            {
+              "traceId": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+              "spanId": "aaaaaaaaaaaaaaaa",
+              "name": "checkout.handle",
+              "kind": 2,
+              "startTimeUnixNano": "900000",
+              "endTimeUnixNano": "900101",
+              "attributes": [
+                {
+                  "key": "request.id",
+                  "value": { "stringValue": "synthetic-run-b" }
+                },
+                {
+                  "key": "http.route",
+                  "value": { "stringValue": "/checkout" }
+                },
+                {
+                  "key": "http.request.method",
+                  "value": { "stringValue": "POST" }
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
