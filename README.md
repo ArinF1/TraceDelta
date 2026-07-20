@@ -87,6 +87,12 @@ make run-example
 
 `make check` formats/verifies the project as documented in [`docs/development.md`](docs/development.md). The equivalent shell entry point is `./scripts/check.sh`.
 
+On Windows PowerShell 5.1, use the native bounded entry point. It runs formatting verification, tests, vet, and the CLI build serially, prevents overlapping repository checks, and applies a per-command timeout while retaining the normal shared Go cache:
+
+```powershell
+.\scripts\check.ps1
+```
+
 ## Architecture
 
 TraceDelta uses a staged local pipeline:

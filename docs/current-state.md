@@ -22,6 +22,7 @@ The repository uses Go 1.26, the newest stable Go version available when the pro
 - Synthetic fixtures demonstrate one unchanged span, one added span, one removed span, one status change, one meaningful duration increase, and equivalent reordered runs under an explicit duration bucket.
 - Unit tests exercise parsing, normalization invariants and boundaries, supported diff behavior, ordering, and CLI exit mapping.
 - Project documentation, local check entry points, and GitHub Actions CI configuration establish a maintainable repository baseline.
+- A Windows PowerShell 5.1 check entry point runs formatting verification, tests, vet, and CLI build serially under a repository mutex; every native child is enrolled in a bounded kill-on-close Windows Job Object, and focused tests exercise success, failure, timeout cleanup, and lock contention.
 - The security policy publishes the dedicated monitored contact `tracedelta.security@gmail.com` for private vulnerability reports.
 - The canonical GitHub repository is public, its `main` CI workflow is passing, and an active `main-protection` branch ruleset is configured.
 
@@ -62,9 +63,12 @@ The repository uses Go 1.26, the newest stable Go version available when the pro
 
 ## Latest validation record
 
-Revalidated on 2026-07-19 after TD-005, using Go 1.26.0 on Windows:
+Revalidated on 2026-07-19 after TD-029, using Go 1.26.0 and Windows PowerShell 5.1 on Windows:
 
-```bash
+```text
+powershell.exe -Command 'go vet ./...'
+powershell.exe -NoLogo -NoProfile -NonInteractive -ExecutionPolicy Bypass -File .\scripts\check.tests.ps1
+powershell.exe -NoLogo -NoProfile -NonInteractive -ExecutionPolicy Bypass -File .\scripts\check.ps1
 gofmt -l <all Go files>
 go test -count=1 ./...
 go test -race -count=1 ./...
@@ -76,11 +80,13 @@ go build -trimpath -o <temporary binary> ./cmd/tracedelta
 git diff --check
 ```
 
-The pre-change `go test -count=1 ./...` baseline passed across all eight packages, and serial `go vet ./...` completed in 4 seconds with no findings.
+The pre-change `go test -count=1 ./...` baseline passed across all eight packages. Direct, nested PowerShell, and five concurrent warm-cache vet probes all exited `0` in approximately 0.4–4.0 seconds, with no surviving Go tool processes. A deliberately fresh disposable cache exceeded a separate 30-second diagnostic bound, confirming that repository validation should retain the normal shared Go cache.
 
-After TD-005, formatting was clean; focused normalization/matching/orchestration tests passed; all eight Go packages passed both normal and race-enabled suites; vet completed in 4.6 seconds with no findings; the standard-library-only module graph verified; and the CLI built successfully. The compatibility comparison produced the documented four findings and returned exactly `1`; comparing the representative canonical OTLP fixture with itself produced no findings and returned exactly `0`. `git diff --check` was clean, and the temporary executable was removed. The repository's Bash wrapper was not rerun because its previously recorded Windows `find` incompatibility remains; every underlying required check was run directly.
+The final focused Windows watchdog suite passed its duplicate-PATH application resolution, success, nonzero-exit, pre-assignment start-gate, timed-out parent/child-tree cleanup, path-with-spaces, and concurrent-lock probes. The pre-gate design passed an eight-run probe series and 800 rapid assignment attempts, but review correctly identified a theoretical start/assignment race; the final design prevents target execution until its launcher belongs to the Job Object and waits for the job's active-process count to reach zero. The bounded Windows entry point then passed from an unrelated working directory with the normal shared cache and removed its temporary CLI executable.
 
-Windows agent note: do not launch multiple elevated Go validation commands in one parallel tool batch. In this environment the command wrapper can remain waiting after a child Go command has exited. Running the commands serially with the normal Go cache avoided the issue in this session: both baseline and final `go vet ./...` completed normally. This is a command-runner concurrency interaction, not a repository test or vet failure.
+Final formatting covered all 15 Go files; all eight Go packages passed uncached normal and race-enabled suites; direct vet completed with no findings; the standard-library-only module graph verified; and the CLI built successfully. The compatibility comparison returned exactly `1` with the documented four findings, while representative-fixture self-comparison returned exactly `0`. The exact nested PowerShell vet command returned `0` in 1.6 seconds. Diff whitespace, merge-marker, TODO, high-confidence secret, temporary-artifact, and intended-status checks were clean.
+
+The recurring `Script running with cell ID ...` status was the automation layer yielding after its observation window while the shell cell remained active. Resuming the same cell with the wait operation returned the command's real completion; the status was not a `go vet` hang. Repository automation must use the serial Windows entry point and treat its final mutex, timeout, cleanup, and process-exit messages as authoritative.
 
 ## Next recommended task
 

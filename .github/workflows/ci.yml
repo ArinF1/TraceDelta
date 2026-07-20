@@ -45,3 +45,27 @@ jobs:
 
       - name: Build CLI
         run: go build ./cmd/tracedelta
+
+  windows-verify:
+    name: Windows validation watchdog
+    runs-on: windows-latest
+    timeout-minutes: 20
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+
+      - name: Set up Go
+        uses: actions/setup-go@v6
+        with:
+          go-version: "1.26.x"
+          cache: true
+
+      - name: Test process watchdog
+        shell: powershell
+        run: .\scripts\check.tests.ps1
+
+      - name: Run bounded Windows checks
+        shell: powershell
+        run: .\scripts\check.ps1
