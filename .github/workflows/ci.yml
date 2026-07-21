@@ -40,6 +40,10 @@ jobs:
       - name: Run tests
         run: go test ./...
 
+      - name: Run bounded fuzz smoke
+        shell: bash
+        run: bash ./scripts/fuzz-smoke.sh
+
       - name: Run go vet
         run: go vet ./...
 
@@ -53,6 +57,29 @@ jobs:
       - name: Smoke-test Action entry point
         shell: bash
         run: bash ./scripts/run-action.smoke.sh ./tracedelta
+
+      - id: local-action-pass
+        name: Exercise passing local composite Action
+        uses: ./
+        with:
+          baseline: testdata/baseline.json
+          candidate: testdata/baseline.json
+          report-directory: tracedelta-action-pass-reports
+
+      - name: Verify passing local Action outputs
+        shell: bash
+        env:
+          TRACEDELTA_EXIT_CODE: ${{ steps.local-action-pass.outputs.exit-code }}
+          TRACEDELTA_OUTCOME: ${{ steps.local-action-pass.outputs.outcome }}
+          TRACEDELTA_TEXT_REPORT: ${{ steps.local-action-pass.outputs.text-report }}
+          TRACEDELTA_JSON_REPORT: ${{ steps.local-action-pass.outputs.json-report }}
+          TRACEDELTA_HTML_REPORT: ${{ steps.local-action-pass.outputs.html-report }}
+        run: |
+          [[ "${TRACEDELTA_EXIT_CODE}" == "0" ]]
+          [[ "${TRACEDELTA_OUTCOME}" == "no_differences" ]]
+          [[ -s "${TRACEDELTA_TEXT_REPORT}" ]]
+          [[ -s "${TRACEDELTA_JSON_REPORT}" ]]
+          [[ -s "${TRACEDELTA_HTML_REPORT}" ]]
 
       - id: local-action
         name: Exercise local composite Action
@@ -76,6 +103,30 @@ jobs:
           [[ -s "${TRACEDELTA_TEXT_REPORT}" ]]
           [[ -s "${TRACEDELTA_JSON_REPORT}" ]]
           [[ -s "${TRACEDELTA_HTML_REPORT}" ]]
+
+      - id: local-action-error
+        name: Exercise failing local composite Action
+        continue-on-error: true
+        uses: ./
+        with:
+          baseline: testdata/baseline.json
+          candidate: testdata/does-not-exist.json
+          report-directory: tracedelta-action-error-reports
+
+      - name: Verify failing local Action outputs
+        if: ${{ always() }}
+        shell: bash
+        env:
+          ACTION_STEP_OUTCOME: ${{ steps.local-action-error.outcome }}
+          TRACEDELTA_EXIT_CODE: ${{ steps.local-action-error.outputs.exit-code }}
+          TRACEDELTA_OUTCOME: ${{ steps.local-action-error.outputs.outcome }}
+        run: |
+          [[ "${ACTION_STEP_OUTCOME}" == "failure" ]]
+          [[ "${TRACEDELTA_EXIT_CODE}" == "2" ]]
+          [[ "${TRACEDELTA_OUTCOME}" == "error" ]]
+          [[ ! -e tracedelta-action-error-reports/tracedelta-report.txt ]]
+          [[ ! -e tracedelta-action-error-reports/tracedelta-report.json ]]
+          [[ ! -e tracedelta-action-error-reports/tracedelta-report.html ]]
 
   windows-verify:
     name: Windows validation watchdog

@@ -31,6 +31,46 @@ run_action() {
     "${BASH}" "${repo_root}/scripts/run-action.sh"
 }
 
+assert_three_reports() {
+  report_dir="$1"
+  expected_exit="$2"
+  expected_text="$3"
+  expected_html="$4"
+  if [[ ! -s "${report_dir}/tracedelta-report.txt" || ! -s "${report_dir}/tracedelta-report.json" || ! -s "${report_dir}/tracedelta-report.html" ]]; then
+    printf 'Action smoke: one or more reports are missing from %s.\n' "${report_dir}" >&2
+    exit 1
+  fi
+  if ! grep -q "${expected_text}" "${report_dir}/tracedelta-report.txt"; then
+    printf 'Action smoke: text outcome is inconsistent.\n' >&2
+    exit 1
+  fi
+  if ! grep -q "\"exitCode\": ${expected_exit}" "${report_dir}/tracedelta-report.json"; then
+    printf 'Action smoke: JSON outcome is inconsistent.\n' >&2
+    exit 1
+  fi
+  if ! grep -qi "${expected_html}" "${report_dir}/tracedelta-report.html"; then
+    printf 'Action smoke: HTML outcome is inconsistent.\n' >&2
+    exit 1
+  fi
+}
+
+pass_output="${work_dir}/pass-output"
+run_action \
+  "${pass_output}" \
+  "${repo_root}/testdata/baseline.json" \
+  "${repo_root}/testdata/baseline.json" \
+  "${work_dir}/pass-reports"
+pass_status=$?
+if [[ "${pass_status}" -ne 0 ]]; then
+  printf 'Action smoke: no-difference result should leave the Action step successful.\n' >&2
+  exit 1
+fi
+if ! grep -qx 'exit-code=0' "${pass_output}" || ! grep -qx 'outcome=no_differences' "${pass_output}"; then
+  printf 'Action smoke: no-difference outputs are incorrect.\n' >&2
+  exit 1
+fi
+assert_three_reports "${work_dir}/pass-reports" 0 'no behavioral differences detected' 'no behavioral differences'
+
 regression_output="${work_dir}/regression-output"
 run_action \
   "${regression_output}" \
@@ -46,10 +86,7 @@ if ! grep -qx 'exit-code=1' "${regression_output}" || ! grep -qx 'outcome=differ
   printf 'Action smoke: regression outputs are incorrect.\n' >&2
   exit 1
 fi
-if [[ ! -s "${work_dir}/regression-reports/tracedelta-report.txt" || ! -s "${work_dir}/regression-reports/tracedelta-report.json" || ! -s "${work_dir}/regression-reports/tracedelta-report.html" ]]; then
-  printf 'Action smoke: one or more regression reports are missing.\n' >&2
-  exit 1
-fi
+assert_three_reports "${work_dir}/regression-reports" 1 'behavioral differences detected' 'behavioral differences detected'
 
 error_output="${work_dir}/error-output"
 run_action \

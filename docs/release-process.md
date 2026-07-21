@@ -33,8 +33,25 @@ Run at minimum:
 make clean
 make check
 make test-race
-go build ./cmd/tracedelta
+bash ./scripts/fuzz-smoke.sh
+
+build_dir="$(mktemp -d)"
+go build -trimpath -o "${build_dir}/tracedelta" ./cmd/tracedelta
+bash ./scripts/ci-compare.smoke.sh "${build_dir}/tracedelta"
+bash ./scripts/run-action.smoke.sh "${build_dir}/tracedelta"
 ```
+
+Expected outcomes:
+
+| Gate | Required result |
+| --- | --- |
+| Essential suite | Formatting, all packages, vet, and CLI build pass. |
+| Race suite | Every package passes under `-race`. |
+| Fuzz smoke | Parser, matcher determinism, and reporter escaping each complete their bounded fuzz interval without a crash or invariant failure. |
+| Generic CLI smoke | Pass returns `0` with JSON/HTML reports, regression returns `1` with reports, invalid/missing input returns `2` without reports. |
+| Action entry smoke | Pass and regression complete with mutually consistent text/JSON/HTML reports and structured outputs; missing input returns/fails with `2` and no report. |
+| Composite Action CI | Local Action invocations prove pass `0`, regression `1`, and failing tool/input `2` behavior through GitHub's actual composite-step/output semantics. |
+| Deliberate example | Normal repository jobs pass; `compare-example` fails on the four documented findings after uploading all three reports. |
 
 Then run the documented example and confirm its output and exit code with a built binary. For a report-format release, inspect every generated artifact and run format-specific escaping/schema tests.
 
