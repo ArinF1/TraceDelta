@@ -8,6 +8,7 @@ This is the execution backlog and status record. Work on one task at a time, nor
 
 - **Description:** Add tag-driven release automation for Linux amd64/arm64, macOS amd64/arm64, and Windows amd64 binaries plus SHA-256 checksums.
 - **Acceptance criteria:** Artifact naming is documented; a dry run builds all five targets; tags matching `v*` create a GitHub Release with binaries and checksums; the workflow uses least privilege and pinned official actions; no signing, package manager, SBOM, or container promise is implied for v0.1.
+- **Status:** The fail-closed five-target builder, checksum verification, pinned least-privilege workflow, documentation, local dry run, and independent Linux CI dry run are complete. Final workflow dispatch/tag publication is pending explicit approval to merge foundation PR #6 into `main` and push the immutable `v0.1.0` tag; no release has been claimed or created.
 - **Relevant files:** `.github/workflows/`, `docs/release-process.md`, `README.md`, `CHANGELOG.md`
 - **Dependencies:** TD-032
 

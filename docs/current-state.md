@@ -56,6 +56,7 @@ The repository uses Go 1.26, the newest stable Go version available when the pro
 - All three formats write to standard output by default or to a new `--output` file; existing files require `--force`, and input files are never valid output targets.
 - Key-based redaction is not anonymization: custom sensitive values under unknown keys and sensitive non-attribute fields remain possible, and source trace files are unchanged on disk.
 - Resource-exhaustion bounds for very large or adversarial inputs are not yet characterized.
+- TD-033 release automation is implemented and its five-target local and Linux CI dry runs pass, but it is not publication-complete. A manual dispatch from the unmerged foundation branch returned `HTTP 404: workflow release.yml not found on the default branch`; merging PR #6 and pushing `v0.1.0` require explicit user approval, so no tag or GitHub Release exists yet.
 
 ## Important architecture facts
 
