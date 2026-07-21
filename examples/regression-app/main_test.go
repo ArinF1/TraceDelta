@@ -28,16 +28,16 @@ func TestExampleScenarioBaselineContract(t *testing.T) {
 	if len(specs) != 3 {
 		t.Fatalf("span count = %d, want 3", len(specs))
 	}
-	wantNames := []string{"checkout.handle", "payment.charge", "cache.get"}
+	wantNames := []string{"checkout.handle", "payment.charge", "inventory.reserve"}
 	for i, want := range wantNames {
 		if specs[i].Name != want {
 			t.Fatalf("span[%d].Name = %q, want %q", i, specs[i].Name, want)
 		}
 	}
-	if specs[0].StatusCode != 1 {
-		t.Fatalf("checkout status = %d, want OK (1)", specs[0].StatusCode)
+	if specs[0].StatusCode != 2 {
+		t.Fatalf("checkout status = %d, want ERROR (2)", specs[0].StatusCode)
 	}
-	if specs[1].Duration != 40_000_000 {
-		t.Fatalf("payment duration = %d, want 40ms", specs[1].Duration)
+	if specs[1].Duration != 70_000_000 {
+		t.Fatalf("payment duration = %d, want 70ms", specs[1].Duration)
 	}
 }
