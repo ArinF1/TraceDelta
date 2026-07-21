@@ -13,6 +13,10 @@ permissions:
 
 jobs:
   compare-example:
+    # The foundation PR introduces the example, so its base cannot generate a
+    # baseline yet. Every subsequent pull request, including the deliberate
+    # regression PR, compares against an already-present trusted base.
+    if: ${{ github.event.pull_request.head.ref != 'codex/v0.1-foundation' }}
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
