@@ -1,6 +1,6 @@
 # Release process
 
-TraceDelta has no published release yet. The release workflow performs a read-only five-target dry run when manually dispatched and publishes only for pushed `v*` tags. Its build job has `contents: read`; only the tag-gated publish job receives `contents: write`.
+TraceDelta v0.1.0 was published on 2026-07-21. The release workflow performs a read-only five-target dry run when manually dispatched and publishes only for pushed `v*` tags. Its build job has `contents: read`; only the tag-gated publish job receives `contents: write`.
 
 ## Release artifacts
 
@@ -17,11 +17,13 @@ tracedelta_0.1.0_checksums.txt
 
 All binaries are `CGO_ENABLED=0`, trimmed-path Go builds from the tagged source. The checksum file uses SHA-256 and relative artifact names. The workflow verifies checksums before upload and again after the tag job downloads the build artifact. v0.1 does not promise signing, package-manager publication, an SBOM, or a container image.
 
+The release also carries `tracedelta-v0.1-demo.webm`, a separately generated 52-second demonstration. Its transcript, SHA-256 digest, provenance, and reproduction steps are recorded in [`demo.md`](demo.md). The binary checksum manifest deliberately covers only the five executable artifacts.
+
 Run the exact five-target build locally with `make test-release-smoke`, or manually dispatch `.github/workflows/release.yml` with a non-release label such as `v0.1.0-test`. A manual dispatch uploads a short-lived workflow artifact and never enters the publish job.
 
 ## Versioning
 
-The repository currently uses `v0.1.0-dev` to describe its development line. When releases begin, TraceDelta intends to use Semantic Versioning:
+The repository uses Semantic Versioning tags. The current published line is `v0.1.0`:
 
 - before `v1.0.0`, minor versions may contain documented compatibility changes;
 - patch versions contain backward-compatible fixes; and

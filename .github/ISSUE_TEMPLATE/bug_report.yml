@@ -15,7 +15,7 @@ body:
     attributes:
       label: TraceDelta version
       description: Provide a release, commit SHA, or branch name.
-      placeholder: v0.1.0-dev or commit SHA
+      placeholder: v0.1.0 or commit SHA
     validations:
       required: true
 

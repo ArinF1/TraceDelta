@@ -2,9 +2,11 @@
 
 All notable changes to TraceDelta will be documented in this file.
 
-The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and the project intends to follow [Semantic Versioning](https://semver.org/) once releases begin.
+The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and releases follow [Semantic Versioning](https://semver.org/) within the documented pre-v1 compatibility policy.
 
 ## [Unreleased]
+
+## [0.1.0] - 2026-07-21
 
 ### Added
 
@@ -30,6 +32,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 - A deterministic synthetic OTLP example application and public deliberately regressed PR whose trusted-base Action workflow demonstrates added, removed, error, and latency findings while retaining terminal, JSON, and HTML reports.
 - Focused parser-input, matcher-order, and reporter-escaping fuzz targets; bounded fuzz automation; and end-to-end CLI/composite-Action pass, regression, tool-error, and report-consistency gates.
 - A least-privilege tag release workflow and fail-closed local builder for versioned Linux amd64/arm64, macOS amd64/arm64, and Windows amd64 binaries with verified SHA-256 checksums and a non-publishing dry-run path.
+- A published 52-second WebM demonstration, on-screen transcript, reproducible comparison/recording commands, and the public deliberately failing Action in PR #7.
 
 ### Changed
 
@@ -42,7 +45,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ### Limitations
 
-- No release has been published.
 - Universal OTLP/vendor-exporter coverage, CLI normalization buckets, configuration files, arbitrary evidence/rule policy, and pull-request comment/check APIs are not implemented.
+- v0.1.0 does not provide signing, package-manager publication, an SBOM, or a container image.
 
-[Unreleased]: https://github.com/ArinF1/TraceDelta/commits/main
+[Unreleased]: https://github.com/ArinF1/TraceDelta/compare/v0.1.0...HEAD
+[0.1.0]: https://github.com/ArinF1/TraceDelta/releases/tag/v0.1.0

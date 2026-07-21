@@ -4,7 +4,12 @@ TraceDelta processes observability data, which may contain credentials, tokens, 
 
 ## Supported versions
 
-TraceDelta has no published stable release yet. Security fixes are currently made on the default branch. Once releases exist, this section will identify supported release lines explicitly.
+TraceDelta is still experimental. Security fixes are currently made on the default branch and, when warranted, released on the supported v0.1 line.
+
+| Version | Supported |
+| --- | --- |
+| 0.1.x | Yes |
+| Earlier/unreleased revisions | No |
 
 ## Reporting a vulnerability
 

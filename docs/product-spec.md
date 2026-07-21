@@ -66,7 +66,7 @@ Version 0.1 is complete only when all of the following are demonstrated:
 11. Tagged releases publish versioned binaries for Linux amd64/arm64, macOS amd64/arm64, and Windows amd64 with SHA-256 checksums.
 12. The README links a reproducible 45–60 second demonstration from trace inputs through the failing comparison and reports.
 
-The current repository slice implements the bounded v0.1 OTLP/HTTP JSON and trace-only File Exporter JSONL profile, early built-in/caller-configured attribute redaction, deterministic trace-preserving normalization and semantic trace/span matching, the complete finding set, equivalent terminal/schema-versioned JSON/standalone HTML reports, a reusable least-privilege composite GitHub Action, a public deliberately regressed synthetic example PR, and the unit/integration/race/fuzz verification matrix. Release artifacts and the demonstration remain open in [`tasks.md`](tasks.md).
+The published v0.1.0 release implements the bounded OTLP/HTTP JSON and trace-only File Exporter JSONL profile, early built-in/caller-configured attribute redaction, deterministic trace-preserving normalization and semantic trace/span matching, the complete finding set, equivalent terminal/schema-versioned JSON/standalone HTML reports, a reusable least-privilege composite GitHub Action, a public deliberately regressed synthetic example PR, the unit/integration/race/fuzz verification matrix, five versioned binaries with checksums, and the linked 52-second demonstration. Work beyond that release boundary remains in [`tasks.md`](tasks.md).
 
 The exact boundary and its rationale are recorded in [ADR 0002](decisions/0002-v0.1-release-boundary.md).
 
@@ -94,7 +94,7 @@ Success is not measured by invented adoption, benchmark, or detection-rate claim
 
 ## Example v0.1 user journey
 
-This journey describes the intended completed v0.1 workflow; the current implementation supports only the subset listed in [`current-state.md`](current-state.md).
+This journey describes the published v0.1 workflow. Exact limitations remain listed in [`current-state.md`](current-state.md).
 
 1. A developer runs the same representative integration scenario against the target branch and the pull-request branch.
 2. Their OpenTelemetry setup writes sanitized OTLP JSON exports to local files.
