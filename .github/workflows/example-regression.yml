@@ -1,0 +1,82 @@
+name: Example regression
+
+on:
+  pull_request:
+    paths:
+      - examples/regression-app/**
+      - action.yml
+      - scripts/ci-compare.sh
+      - scripts/run-action.sh
+
+permissions:
+  contents: read
+
+jobs:
+  compare-example:
+    # The foundation PR introduces the example, so its base cannot generate a
+    # baseline yet. Every subsequent pull request, including the deliberate
+    # regression PR, compares against an already-present trusted base.
+    if: ${{ github.event.pull_request.head.ref != 'codex/v0.1-foundation' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Check out trusted base
+        uses: actions/checkout@v6
+        with:
+          ref: ${{ github.event.pull_request.base.sha }}
+          path: baseline-source
+          persist-credentials: false
+
+      - name: Check out candidate
+        uses: actions/checkout@v6
+        with:
+          repository: ${{ github.event.pull_request.head.repo.full_name }}
+          ref: ${{ github.event.pull_request.head.sha }}
+          path: candidate-source
+          persist-credentials: false
+
+      - name: Set up Go
+        uses: actions/setup-go@v6
+        with:
+          go-version: "1.26.x"
+          cache: false
+
+      - name: Generate synthetic trace artifacts
+        shell: bash
+        run: |
+          mkdir -- artifacts
+          (cd baseline-source && go run ./examples/regression-app --output ../artifacts/baseline.json)
+          (cd candidate-source && go run ./examples/regression-app --output ../artifacts/candidate.json)
+
+      - id: tracedelta
+        name: Compare generated traces
+        continue-on-error: true
+        uses: ./baseline-source
+        with:
+          baseline: artifacts/baseline.json
+          candidate: artifacts/candidate.json
+          report-directory: artifacts/tracedelta-reports
+
+      - name: Upload completed reports
+        if: ${{ always() && (steps.tracedelta.outputs.exit-code == '0' || steps.tracedelta.outputs.exit-code == '1') }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: example-tracedelta-reports
+          path: |
+            ${{ steps.tracedelta.outputs.text-report }}
+            ${{ steps.tracedelta.outputs.json-report }}
+            ${{ steps.tracedelta.outputs.html-report }}
+          if-no-files-found: error
+          retention-days: 3
+
+      - name: Enforce example comparison
+        if: ${{ always() }}
+        shell: bash
+        env:
+          TRACEDELTA_EXIT_CODE: ${{ steps.tracedelta.outputs.exit-code }}
+        run: |
+          case "${TRACEDELTA_EXIT_CODE}" in
+            0) printf 'Example behavior is unchanged.\n' ;;
+            1) printf 'Example behavior regressed; reports were preserved.\n' >&2; exit 1 ;;
+            *) printf 'Example comparison could not complete.\n' >&2; exit 2 ;;
+          esac

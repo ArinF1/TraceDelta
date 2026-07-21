@@ -4,116 +4,170 @@ This is the execution backlog and status record. Work on one task at a time, nor
 
 ## Now
 
-### TD-006 — Match corresponding traces
+### TD-033 — Publish versioned v0.1 binaries
 
-- **Description:** Pair baseline and candidate traces using normalized root operation, service, kind, route, stable attributes, and deterministic occurrence handling.
-- **Acceptance criteria:** Unambiguous trace pairs, added/removed traces, repeated trace operations, reordered input, and ambiguous candidates are tested; raw generated IDs are not cross-run identity; every match records explainable evidence.
-- **Relevant files:** `internal/match/`, `internal/model/`, `docs/trace-matching.md`, `testdata/`
-- **Dependencies:** TD-005
+- **Description:** Add tag-driven release automation for Linux amd64/arm64, macOS amd64/arm64, and Windows amd64 binaries plus SHA-256 checksums.
+- **Acceptance criteria:** Artifact naming is documented; a dry run builds all five targets; tags matching `v*` create a GitHub Release with binaries and checksums; the workflow uses least privilege and pinned official actions; no signing, package manager, SBOM, or container promise is implied for v0.1.
+- **Status:** The fail-closed five-target builder, checksum verification, pinned least-privilege workflow, documentation, local dry run, and independent Linux CI dry run are complete. Final workflow dispatch/tag publication is pending explicit approval to merge foundation PR #6 into `main` and push the immutable `v0.1.0` tag; no release has been claimed or created.
+- **Relevant files:** `.github/workflows/`, `docs/release-process.md`, `README.md`, `CHANGELOG.md`
+- **Dependencies:** TD-032
 
 ## Next
 
-### TD-007 — Match spans structurally and semantically
+The following sequence is the complete remaining v0.1 gate after the current task. Execute one task at a time in this order unless a dependency or verified finding requires an explicit reprioritization.
 
-- **Description:** Pair spans inside matched traces using parent context, service/name/kind, semantic attributes, and deterministic sibling occurrence order.
-- **Acceptance criteria:** Repeated span names under different parents pair correctly; no span is reused; reordering does not change results; ambiguity is surfaced; added/removed spans remain correct; tests cover relationship changes.
-- **Relevant files:** `internal/match/`, `internal/model/`, `internal/diff/`, `docs/trace-matching.md`
-- **Dependencies:** TD-006
+### TD-034 — Publish the 45–60 second demonstration
 
-### TD-008 — Add service, status, error, and relationship rules
+- **Description:** Record and publish a concise demonstration of the versioned binary and deliberately regressed pull-request workflow.
+- **Acceptance criteria:** The recording is 45–60 seconds, shows the inputs, terminal regression result, JSON/HTML artifacts, and failing Action without exposing personal data; a short transcript and reproducible command sequence accompany it; the README links the final asset.
+- **Relevant files:** `README.md`, `docs/`, `examples/`
+- **Dependencies:** TD-031, TD-033
 
-- **Description:** Produce typed semantic findings for changed service calls, span status/error attributes, and parent-child relationships.
-- **Acceptance criteria:** Each rule has finding and non-finding tests; evidence shows safe before/after values; findings have stable kinds/order; relationship changes do not become misleading add/remove pairs; current status behavior remains compatible or is documented.
-- **Relevant files:** `internal/diff/`, `internal/model/`, `internal/report/`, `docs/product-spec.md`
-- **Dependencies:** TD-007
+## After v0.1
+
+These tasks remain useful but do not block the first release.
 
 ### TD-009 — Compare database operation shapes safely
 
 - **Description:** Detect meaningful database system/operation/statement-shape changes without reporting bound values or sensitive literals.
 - **Acceptance criteria:** System, operation, table/collection, and predicate-shape cases are tested; literal-only changes do not produce leaked values; unsupported statement forms fail closed or emit an explicit limitation; privacy documentation matches behavior.
 - **Relevant files:** `internal/diff/`, `internal/normalize/`, `internal/model/`, `docs/privacy-and-security.md`
-- **Dependencies:** TD-005, TD-007, TD-008
+- **Dependencies:** v0.1, separate prioritization
 
-### TD-010 — Strengthen latency comparison policy
+### TD-017 — Improve ambiguity diagnostics beyond the v0.1 minimum
 
-- **Description:** Combine relative and absolute duration tolerances and define zero/short-span behavior.
-- **Acceptance criteria:** Boundary equality, decreases, zero baselines, short spans, and large regressions are tested; finding evidence includes before/after durations and applicable threshold; defaults and CLI syntax are documented.
-- **Relevant files:** `internal/diff/`, `cmd/tracedelta/`, `pkg/tracedelta/`, `docs/cli-spec.md`
-- **Dependencies:** TD-005
-
-### TD-011 — Add versioned JSON reporting
-
-- **Description:** Render the shared comparison result as deterministic machine-readable JSON.
-- **Acceptance criteria:** `--format json` works; schema version, input metadata, summary, ordered findings, evidence, and result policy are documented; golden/schema tests verify stable encoding and escaping; exit codes match text output.
-- **Relevant files:** `internal/report/`, `cmd/tracedelta/`, `docs/cli-spec.md`, `docs/`
-- **Dependencies:** TD-008, TD-010
-
-### TD-012 — Add a standalone HTML report
-
-- **Description:** Produce a basic self-contained HTML report from the same comparison result.
-- **Acceptance criteria:** `--format html` works without external assets; trace-derived content is HTML-escaped; ordered findings/counts match text and JSON; the report opens offline; representative output is visually reviewed and tested.
-- **Relevant files:** `internal/report/`, `cmd/tracedelta/`, `docs/cli-spec.md`, `examples/`
-- **Dependencies:** TD-011
-
-### TD-013 — Add typed configuration and output-file policy
-
-- **Description:** Support explicit configuration for tolerances, filters, rules, and output while preserving safe defaults.
-- **Acceptance criteria:** Precedence between defaults, config, and flags is documented/tested; unknown keys fail helpfully; configuration is passed without globals; `--output` has safe overwrite/stdout behavior; an effective configuration can be diagnosed without exposing secrets.
-- **Relevant files:** `pkg/tracedelta/`, `cmd/tracedelta/`, `internal/`, `docs/cli-spec.md`, `examples/`
-- **Dependencies:** TD-010, TD-011, TD-012
-
-### TD-014 — Document and test generic CI usage
-
-- **Description:** Define a headless artifact-to-comparison workflow that treats exit codes and reports correctly in generic CI.
-- **Acceptance criteria:** A copyable example distinguishes regression code `1` from tool failure `2`; it preserves selected reports as artifacts without logging raw traces; a smoke test exercises the documented invocation; troubleshooting covers missing/invalid artifacts.
-- **Relevant files:** `examples/`, `docs/cli-spec.md`, `docs/privacy-and-security.md`, `scripts/`
-- **Dependencies:** TD-011, TD-013
-
-### TD-015 — Provide GitHub Actions integration
-
-- **Description:** Add a least-privilege reusable/example workflow for comparing baseline and candidate trace artifacts in pull requests.
-- **Acceptance criteria:** The workflow runs from a documented sample, uploads or summarizes safe reports, distinguishes result/error exit codes, uses pinned major official actions, works safely for fork pull requests, and requests no unnecessary write permission or secret.
-- **Relevant files:** `.github/workflows/`, `examples/`, `README.md`, `docs/privacy-and-security.md`
-- **Dependencies:** TD-014
-
-## Later
-
-### TD-016 — Enforce attribute filtering and redaction
-
-- **Description:** Implement allowlists, denylist precedence, and early deterministic redaction across every report/error path.
-- **Acceptance criteria:** Sensitive nested values cannot reach text/JSON/HTML/error output; denylist precedence is tested; defaults cover common credential fields; documentation clearly states residual risk.
-- **Relevant files:** `internal/normalize/`, `internal/report/`, `docs/privacy-and-security.md`
-- **Dependencies:** TD-004, TD-013
-
-### TD-017 — Improve ambiguity diagnostics
-
-- **Description:** Make uncertain trace/span matches actionable without forcing misleading findings.
-- **Acceptance criteria:** Diagnostics list non-sensitive competing signals; policy for ambiguous items is configurable and tested; deterministic behavior holds across reordered input; CLI and JSON distinguish ambiguity from parse failure.
+- **Description:** Add configurable policy and richer diagnostics for uncertain trace/span matches without forcing misleading findings.
+- **Acceptance criteria:** Diagnostics list non-sensitive competing signals; policy is configurable and tested; deterministic behavior holds across reordered input; CLI and JSON distinguish ambiguity from parse failure.
 - **Relevant files:** `internal/match/`, `internal/report/`, `docs/trace-matching.md`
-- **Dependencies:** TD-006, TD-007, TD-011, TD-013
+- **Dependencies:** v0.1, separate prioritization
 
-### TD-018 — Build an OTLP compatibility corpus
+### TD-019 — Characterize larger-input resource use
 
-- **Description:** Add sanitized synthetic fixtures representing common exporter encodings and semantic-convention versions.
-- **Acceptance criteria:** Each fixture names its producer shape/version without real telemetry; a compatibility document maps supported constructs to tests; unsupported constructs have explicit diagnostics; fixture licensing/provenance is clear.
-- **Relevant files:** `testdata/`, `internal/otlp/`, `docs/`
-- **Dependencies:** TD-004, TD-016
-
-### TD-019 — Bound large-input resource use
-
-- **Description:** Measure and constrain parser/matcher behavior for large or adversarial local trace sets.
+- **Description:** Measure and further constrain parser/matcher behavior beyond the safe input bounds required for v0.1.
 - **Acceptance criteria:** Benchmarks use synthetic data; configurable size/depth/span limits fail with actionable errors; matching avoids accidental quadratic behavior for representative inputs; documented bounds are evidence-based.
 - **Relevant files:** `internal/otlp/`, `internal/match/`, `pkg/tracedelta/`, `docs/privacy-and-security.md`
-- **Dependencies:** TD-006, TD-007, TD-018
+- **Dependencies:** v0.1, separate prioritization
 
 ### TD-020 — Research evidence-based source attribution
 
 - **Description:** Explore linking findings to commit/source metadata explicitly present in telemetry, without guessing causality.
 - **Acceptance criteria:** A design note defines trusted inputs, uncertainty, privacy impact, and non-goals; a prototype remains opt-in/experimental; no public capability claim is made without tests and representative evidence.
 - **Relevant files:** `docs/decisions/`, `docs/product-spec.md`, future experimental package
-- **Dependencies:** TD-008, TD-016
+- **Dependencies:** v0.1, separate prioritization
 
 ## Completed
+
+### TD-032 — Complete the v0.1 verification matrix
+
+- **Description:** Add the integration, race, and focused fuzz coverage needed to make the completed release workflow trustworthy without duplicating unit-test coverage.
+- **Acceptance criteria:** End-to-end CLI and Action smoke tests cover pass/regression/tool-error outcomes and report consistency; `go test -race ./...` passes; bounded fuzz smoke runs cover parser input, matcher determinism, and reporter escaping; the release checklist names exact commands and expected outcomes.
+- **Outcome:** Added focused arbitrary-byte parser, trace-order matcher determinism, and cross-format reporter escaping fuzz targets plus a bounded two-second-per-target smoke script and Make target. Expanded the Action entry smoke and actual local composite-Action CI to cover pass `0`, regression `1`, tool/input `2`, all three non-empty reports, structured outputs, and report-policy consistency. The release checklist now names exact commands and required outcomes.
+- **Relevant files:** `internal/otlp/parser_fuzz_test.go`, `internal/match/match_fuzz_test.go`, `internal/report/report_fuzz_test.go`, `scripts/fuzz-smoke.sh`, `scripts/run-action.smoke.sh`, `.github/workflows/ci.yml`, `Makefile`, `docs/development.md`, `docs/release-process.md`
+- **Dependencies:** TD-013, TD-015, TD-031
+
+### TD-031 — Add the deliberately regressed example pull request
+
+- **Description:** Add a small synthetic example application and a public pull request whose intentional regression exercises added/removed spans, an error change, and a latency regression through the reusable Action.
+- **Acceptance criteria:** The application emits deterministic synthetic OTLP JSON without external services or secrets; baseline and candidate collection is reproducible; the linked pull request fails for the documented reasons and preserves all three report formats; maintainers can reset/replay the demonstration without rewriting history.
+- **Outcome:** Added a deterministic standard-library Go example that emits synthetic OTLP/HTTP JSON with no network or secret. The fork-safe workflow regenerates baseline and candidate artifacts from their exact commits, executes the trusted base Action, uploads all three reports, and then enforces the result. Public draft [PR #7](https://github.com/ArinF1/TraceDelta/pull/7) changes only the scenario and its contract test; normal Linux/Windows CI passes, the example comparison fails with the promised four findings, and the retained artifact contains non-empty text, JSON, and HTML reports. The branch can be replayed from commit `3021105` without rewriting history.
+- **Relevant files:** `examples/regression-app/`, `.github/workflows/example-regression.yml`, `action.yml`, `README.md`
+- **Dependencies:** TD-015
+
+### TD-015 — Provide GitHub Actions integration
+
+- **Description:** Package TraceDelta as a reusable GitHub Action for comparing caller-supplied baseline and candidate trace artifacts.
+- **Acceptance criteria:** `action.yml` has documented inputs/outputs and executes the version of TraceDelta at the pinned Action ref; a sample workflow uploads or summarizes safe reports, distinguishes exit `1` from `2`, works for fork pull requests, and requests no write permission or secret.
+- **Outcome:** Added a source-pinned composite Action with required baseline/candidate inputs, finite latency/redaction inputs, structured outcome/exit/report outputs, a bounded shell entry point, and local composite-Action CI coverage. Completed comparisons preserve JSON/HTML artifacts while tool/input failures return `2` without reports. The copyable `pull_request` example uses `contents: read`, no secret, no persisted checkout credential, and an explicit post-upload gate that distinguishes regression `1` from failure `2` for untrusted forks.
+- **Relevant files:** `action.yml`, `scripts/run-action.sh`, `scripts/run-action.smoke.sh`, `.github/workflows/ci.yml`, `examples/github-action/`, `docs/github-action.md`, `README.md`, `docs/privacy-and-security.md`
+- **Dependencies:** TD-014
+
+### TD-014 — Document and test generic CI usage
+
+- **Description:** Define a headless artifact-to-comparison workflow that treats exit codes and reports correctly in generic CI.
+- **Acceptance criteria:** A copyable example distinguishes regression code `1` from tool failure `2`; it preserves selected reports as artifacts without logging raw traces; a smoke test exercises the documented invocation; troubleshooting covers missing/invalid artifacts.
+- **Outcome:** Added a provider-neutral shell wrapper that accepts a built binary and two existing artifacts, requires a fresh report directory, creates equivalent JSON/HTML reports without printing their contents, preserves comparison exits `0`/`1`, maps input/tool/report failures to `2`, checks report presence and result agreement, and removes partial output. Added copyable gate/upload guidance, missing/invalid-artifact troubleshooting, a real-binary smoke covering pass/regression/invalid/missing outcomes, and a Linux CI step that runs it.
+- **Relevant files:** `scripts/ci-compare.sh`, `scripts/ci-compare.smoke.sh`, `examples/ci/README.md`, `.github/workflows/ci.yml`, `docs/cli-spec.md`, `docs/privacy-and-security.md`, `README.md`
+- **Dependencies:** TD-011, TD-013
+
+### TD-013 — Finalize bounded CLI and output-file policy
+
+- **Description:** Support only the v0.1 flags for latency thresholds, additional redacted attribute keys, report format, output destination, and explicit overwrite.
+- **Acceptance criteria:** Defaults and repeated-key behavior are documented/tested; unknown flags fail helpfully; options are passed without globals; `--output` refuses accidental overwrite unless `--force` is supplied; no configuration-file or arbitrary rule/plugin syntax is added.
+- **Outcome:** Finalized the finite CLI around baseline/candidate, `20%`/`10ms` thresholds, repeatable narrowing-only `--redact-attribute`, text/JSON/HTML, `--output`, and explicit `--force`. Reports render fully before destination creation; new files use exclusive creation, existing files remain unchanged without force, input paths and existing aliases are forbidden output targets, parse/render failures create no new artifact, short writes fail, and output success preserves comparison exit `0`/`1`. Unknown/config-style flags and empty redaction keys fail helpfully.
+- **Relevant files:** `cmd/tracedelta/`, `pkg/tracedelta/`, `docs/cli-spec.md`, `docs/privacy-and-security.md`, `examples/basic/README.md`
+- **Dependencies:** TD-010, TD-012, TD-016
+
+### TD-012 — Add a standalone HTML report
+
+- **Description:** Produce a basic self-contained HTML report from the same comparison result.
+- **Acceptance criteria:** `--format html` works without external assets; trace-derived content is HTML-escaped; ordered findings/counts match text and JSON; the report opens offline; representative output is visually reviewed and tested.
+- **Outcome:** Added buffered `html/template` reporting through the report package, public API, and `--format html`. One responsive semantic document contains inline CSS, no scripts or external resources, shared input/count/finding/evidence order, explicit pass/differences presentation, contextual escaping, and a useful empty state. Structural, escaping, redaction, public, CLI, and exit-policy tests pass; actual generated output was visually reviewed in offline desktop and responsive Edge renders.
+- **Relevant files:** `internal/report/html.go`, `internal/report/html_test.go`, `pkg/tracedelta/`, `cmd/tracedelta/`, `README.md`, `docs/cli-spec.md`, `docs/privacy-and-security.md`
+- **Dependencies:** TD-011
+
+### TD-011 — Add versioned JSON reporting
+
+- **Description:** Render the shared comparison result as deterministic machine-readable JSON.
+- **Acceptance criteria:** `--format json` works; schema version, input metadata, summary, ordered findings, evidence, and result policy are documented; golden/schema tests verify stable encoding and escaping; exit codes match text output.
+- **Outcome:** Added buffered `tracedelta.report/v1` JSON output through the report package, public Go API, and `--format json`. The uniform schema contains input paths, summary/finding counts, explicit no-differences/differences status and exit code, ordered safe span identity, evidence presence/value, and duration policy. Golden, escaping, no-partial-write, redaction, CLI order, and pass/regression tests lock the contract; tool errors remain exit `2` without a successful report object.
+- **Relevant files:** `internal/report/json.go`, `internal/report/json_test.go`, `pkg/tracedelta/`, `cmd/tracedelta/`, `docs/json-report-schema.md`, `docs/cli-spec.md`
+- **Dependencies:** TD-008, TD-010, TD-016
+
+### TD-010 — Strengthen latency comparison policy
+
+- **Description:** Require candidate latency increases to meet configurable relative and absolute tolerances and define zero/short-span behavior.
+- **Acceptance criteria:** Boundary equality, decreases, zero baselines, short spans, and large regressions are tested; both thresholds must be met; finding evidence includes safe before/after durations and effective thresholds; defaults are `20%` and `10ms`; CLI syntax is documented.
+- **Outcome:** Added a non-negative absolute duration threshold alongside the existing finite relative ratio, with `20%`/`10ms` public and CLI defaults and a new `--duration-threshold-absolute` Go-duration flag. Both boundaries must be met; equality passes; zero baselines still require the absolute minimum; decreases/equality never report; either side can be disabled with zero. Duration findings carry safe before/after durations and both effective thresholds, and terminal output renders that policy deterministically.
+- **Relevant files:** `internal/diff/`, `internal/report/`, `cmd/tracedelta/`, `pkg/tracedelta/`, `README.md`, `docs/cli-spec.md`
+- **Dependencies:** TD-007
+
+### TD-008 — Finalize v0.1 error findings
+
+- **Description:** Produce typed findings for error-state changes using span status and the safe `error.type` attribute; never use error messages or exception stack traces as evidence.
+- **Acceptance criteria:** OK-to-error, error-to-OK, changed `error.type`, unchanged error, and missing evidence are tested; findings have stable kinds/order and safe before/after evidence; existing status behavior remains compatible or is documented.
+- **Outcome:** Preserved status transitions as one compatible `status` finding and added a separate typed `error.type` finding only when both matched spans remain in `ERROR`. String error types are normalized as safe diff evidence but excluded from match identity; non-string types are missing evidence; caller redaction takes precedence. Comparison values distinguish missing, empty, and present evidence; the terminal report escapes values and never receives status messages or exception content.
+- **Relevant files:** `internal/diff/`, `internal/model/`, `internal/normalize/`, `internal/report/`, `pkg/tracedelta/`, `docs/`
+- **Dependencies:** TD-007, TD-016
+
+### TD-016 — Enforce early attribute redaction
+
+- **Description:** Redact built-in credential/personal-data attribute keys and caller-supplied denylisted keys before matching evidence or findings are constructed.
+- **Acceptance criteria:** Sensitive primitive and nested values cannot reach comparison results, text/JSON/HTML output, or covered diagnostics; deny rules override the fixed safe evidence set; replacement is deterministic; defaults cover common credential and personal-data keys; documentation states residual risk without claiming anonymization.
+- **Outcome:** Added an immutable post-parse redaction stage that removes conservative case-insensitive credential/personal-data keys from span, resource, scope, and recursive key/value-list attributes before normalization. Go callers can add exact denied keys; caller rules override safe evidence keys and clear derived `service.name` when applicable. Tests cover common defaults, nested arrays/lists, deterministic removal, non-mutation, safe-key precedence, sanitized comparison/text results, and value-free option diagnostics. Future JSON/HTML reporters remain constrained to the sanitized comparison model.
+- **Relevant files:** `internal/redact/`, `internal/model/`, `pkg/tracedelta/`, `internal/report/`, `docs/privacy-and-security.md`, `docs/architecture.md`
+- **Dependencies:** TD-018
+
+### TD-018 — Complete the realistic v0.1 OTLP JSON profile
+
+- **Description:** Accept either one OTLP/HTTP JSON `ExportTraceServiceRequest` object or a trace-only OTLP File Exporter JSON Lines stream rather than expanding toward universal vendor compatibility.
+- **Acceptance criteria:** Synthetic fixtures cover multiple JSONL records, multiple resource/scope groups and traces, canonical enum/integer encodings, nested `AnyValue` values, events, and links; record order is irrelevant; accepted unused data cannot become report evidence; unknown safe fields remain tolerated; mixed telemetry/vendor envelopes fail actionably; fixture provenance is documented.
+- **Outcome:** Added multi-record trace-only JSONL parsing and a synthetic File Exporter fixture; recursive array/key/value-list attributes with a 64-level depth bound; event and link field validation with deliberately discarded payloads; deterministic cross-record merging independent of record order; cross-record duplicate detection; actionable rejection of recognized non-trace signals and common outer envelopes; and tests proving composite values cannot enter matching evidence.
+- **Relevant files:** `testdata/`, `internal/otlp/`, `internal/model/`, `internal/normalize/`, `pkg/tracedelta/`, `docs/`
+- **Dependencies:** TD-004, TD-030
+
+### TD-007 — Match spans structurally and semantically
+
+- **Description:** Pair spans inside matched traces using parent context, service/name/kind, semantic attributes, and deterministic sibling occurrence order.
+- **Acceptance criteria:** Repeated span names under different parents pair correctly; no span is reused; reordering does not change results; ambiguity is surfaced without leaking unsafe attributes; added/removed spans remain correct.
+- **Outcome:** Replaced trace-local exact occurrence matching with parent-aware one-to-one span matching. Top-level and descendant groups use service/name/kind plus fixed safe attributes and matched-parent context; distinguishable repeated siblings use normalized start/order evidence; unique reparented spans pair through an explicit relationship fallback; candidates cannot be reused; unmatched spans remain added/removed; and indistinguishable duplicates return typed value-free errors.
+- **Relevant files:** `internal/match/`, `pkg/tracedelta/`, `docs/trace-matching.md`, `docs/architecture.md`, `docs/current-state.md`
+- **Dependencies:** TD-006
+
+### TD-006 — Match corresponding traces
+
+- **Description:** Pair baseline and candidate traces using normalized root operation, service, kind, route, safe stable attributes, and deterministic occurrence handling.
+- **Acceptance criteria:** Unambiguous trace pairs, added/removed traces, repeated trace operations, reordered input, and ambiguous candidates are tested; raw generated IDs are not cross-run identity; every match records non-sensitive explainable evidence.
+- **Outcome:** Added a deterministic trace-match stage that groups by normalized root identity, pairs unique exact structures before mutual unique-best structural overlaps, records only signal categories and overlap counts as evidence, treats unmatched trace spans as added/removed, and returns a typed non-sensitive error for unresolved repeated-trace ambiguity. The temporary span handoff now matches by trace-local rather than snapshot-global occurrence. Regenerated IDs, duration/status changes, and input order do not establish trace identity.
+- **Relevant files:** `internal/match/`, `pkg/tracedelta/`, `docs/trace-matching.md`, `docs/architecture.md`, `docs/current-state.md`
+- **Dependencies:** TD-005, TD-030
+
+### TD-030 — Lock the v0.1 release scope
+
+- **Description:** Replace the open-ended v0.1 capability list with a finite release contract covering realistic OTLP JSON input, deterministic span comparison, safe reports, CI/release packaging, a reproducible regressed example, and a 45–60 second demonstration.
+- **Acceptance criteria:** The product specification, architecture, roadmap, and backlog agree on the required v0.1 capabilities and explicit non-goals; each remaining release deliverable has a bounded task and dependency order; current behavior is not presented as complete; an accepted ADR records the compatibility and security boundary.
+- **Outcome:** Accepted ADR 0002 and aligned the product, architecture, roadmap, CLI/privacy/release guidance, current state, and backlog around a finite contract: official OTLP/HTTP JSON plus trace-only File Exporter JSONL; deterministic trace/span matching; added/removed/error/latency findings; early denylist redaction; terminal/JSON/HTML reports; a reusable Action and regressed example PR; useful unit/integration/race/fuzz gates; five binary targets with checksums; and a 45–60 second demonstration. Deferred broader semantic and hosted capabilities beyond v0.1.
+- **Relevant files:** `README.md`, `ROADMAP.md`, `docs/product-spec.md`, `docs/architecture.md`, `docs/current-state.md`, `docs/tasks.md`, `docs/decisions/`
+- **Dependencies:** TD-005
 
 ### TD-001 — Establish repository and project memory
 

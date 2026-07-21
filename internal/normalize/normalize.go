@@ -111,6 +111,7 @@ func normalizeTrace(trace model.Trace, options Options) (model.NormalizedTrace, 
 		if err != nil {
 			return model.NormalizedTrace{}, fmt.Errorf("span[%d]: attributes: %w", index, err)
 		}
+		errorType, errorTypePresent := canonicalErrorType(span.Attributes)
 
 		nodes[index] = canonicalNode{
 			sourceIndex: index,
@@ -122,11 +123,13 @@ func normalizeTrace(trace model.Trace, options Options) (model.NormalizedTrace, 
 					Name:        span.Name,
 					Kind:        span.Kind,
 				},
-				Parent:     model.ParentReference{Kind: model.ParentRoot},
-				StartOrder: startOrders[index],
-				Duration:   duration,
-				Status:     span.Status,
-				Attributes: attributes,
+				Parent:           model.ParentReference{Kind: model.ParentRoot},
+				StartOrder:       startOrders[index],
+				Duration:         duration,
+				Status:           span.Status,
+				ErrorType:        errorType,
+				ErrorTypePresent: errorTypePresent,
+				Attributes:       attributes,
 			},
 		}
 	}
@@ -322,6 +325,9 @@ func canonicalAttributes(attributes model.Attributes) ([]model.NormalizedAttribu
 	result := make([]model.NormalizedAttribute, 0, len(keys))
 	for _, key := range keys {
 		value := attributes[key]
+		if !isScalarAttributeType(value.Type) {
+			continue
+		}
 		canonical, err := canonicalAttributeValue(value)
 		if err != nil {
 			return nil, fmt.Errorf("%s: %w", key, err)
@@ -333,6 +339,27 @@ func canonicalAttributes(attributes model.Attributes) ([]model.NormalizedAttribu
 		})
 	}
 	return result, nil
+}
+
+func canonicalErrorType(attributes model.Attributes) (string, bool) {
+	value, exists := attributes["error.type"]
+	if !exists || value.Type != model.AttributeValueString {
+		return "", false
+	}
+	return value.StringValue, true
+}
+
+func isScalarAttributeType(valueType model.AttributeValueType) bool {
+	switch valueType {
+	case model.AttributeValueString,
+		model.AttributeValueBool,
+		model.AttributeValueInt,
+		model.AttributeValueDouble,
+		model.AttributeValueBytes:
+		return true
+	default:
+		return false
+	}
 }
 
 func isSelectedAttribute(key string) bool {

@@ -46,22 +46,38 @@ type scope struct {
 }
 
 type jsonSpan struct {
-	TraceID                string            `json:"traceId"`
-	SpanID                 string            `json:"spanId"`
-	TraceState             string            `json:"traceState,omitempty"`
-	ParentSpanID           string            `json:"parentSpanId,omitempty"`
-	Flags                  json.RawMessage   `json:"flags,omitempty"`
-	Name                   string            `json:"name"`
-	Kind                   json.RawMessage   `json:"kind,omitempty"`
-	StartTimeUnixNano      json.RawMessage   `json:"startTimeUnixNano"`
-	EndTimeUnixNano        json.RawMessage   `json:"endTimeUnixNano"`
-	Attributes             []keyValue        `json:"attributes,omitempty"`
-	DroppedAttributesCount json.RawMessage   `json:"droppedAttributesCount,omitempty"`
-	Events                 []json.RawMessage `json:"events,omitempty"`
-	DroppedEventsCount     json.RawMessage   `json:"droppedEventsCount,omitempty"`
-	Links                  []json.RawMessage `json:"links,omitempty"`
-	DroppedLinksCount      json.RawMessage   `json:"droppedLinksCount,omitempty"`
-	Status                 *jsonStatus       `json:"status,omitempty"`
+	TraceID                string          `json:"traceId"`
+	SpanID                 string          `json:"spanId"`
+	TraceState             string          `json:"traceState,omitempty"`
+	ParentSpanID           string          `json:"parentSpanId,omitempty"`
+	Flags                  json.RawMessage `json:"flags,omitempty"`
+	Name                   string          `json:"name"`
+	Kind                   json.RawMessage `json:"kind,omitempty"`
+	StartTimeUnixNano      json.RawMessage `json:"startTimeUnixNano"`
+	EndTimeUnixNano        json.RawMessage `json:"endTimeUnixNano"`
+	Attributes             []keyValue      `json:"attributes,omitempty"`
+	DroppedAttributesCount json.RawMessage `json:"droppedAttributesCount,omitempty"`
+	Events                 []jsonEvent     `json:"events,omitempty"`
+	DroppedEventsCount     json.RawMessage `json:"droppedEventsCount,omitempty"`
+	Links                  []jsonLink      `json:"links,omitempty"`
+	DroppedLinksCount      json.RawMessage `json:"droppedLinksCount,omitempty"`
+	Status                 *jsonStatus     `json:"status,omitempty"`
+}
+
+type jsonEvent struct {
+	TimeUnixNano           json.RawMessage `json:"timeUnixNano,omitempty"`
+	Name                   string          `json:"name,omitempty"`
+	Attributes             []keyValue      `json:"attributes,omitempty"`
+	DroppedAttributesCount json.RawMessage `json:"droppedAttributesCount,omitempty"`
+}
+
+type jsonLink struct {
+	TraceID                string          `json:"traceId,omitempty"`
+	SpanID                 string          `json:"spanId,omitempty"`
+	TraceState             string          `json:"traceState,omitempty"`
+	Attributes             []keyValue      `json:"attributes,omitempty"`
+	DroppedAttributesCount json.RawMessage `json:"droppedAttributesCount,omitempty"`
+	Flags                  json.RawMessage `json:"flags,omitempty"`
 }
 
 type jsonStatus struct {
@@ -75,37 +91,111 @@ type keyValue struct {
 }
 
 type anyValue struct {
-	StringValue *string         `json:"stringValue,omitempty"`
-	BoolValue   *bool           `json:"boolValue,omitempty"`
-	IntValue    json.RawMessage `json:"intValue,omitempty"`
-	DoubleValue json.RawMessage `json:"doubleValue,omitempty"`
-	ArrayValue  json.RawMessage `json:"arrayValue,omitempty"`
-	KVListValue json.RawMessage `json:"kvlistValue,omitempty"`
-	BytesValue  *string         `json:"bytesValue,omitempty"`
+	StringValue *string          `json:"stringValue,omitempty"`
+	BoolValue   *bool            `json:"boolValue,omitempty"`
+	IntValue    json.RawMessage  `json:"intValue,omitempty"`
+	DoubleValue json.RawMessage  `json:"doubleValue,omitempty"`
+	ArrayValue  *jsonArrayValue  `json:"arrayValue,omitempty"`
+	KVListValue *jsonKVListValue `json:"kvlistValue,omitempty"`
+	BytesValue  *string          `json:"bytesValue,omitempty"`
 }
 
-// Parse decodes one OTLP JSON trace export from r. Unknown message fields are
-// ignored as required by OTLP JSON; recognized unsupported structures fail
-// with a contextual validation error.
+type jsonArrayValue struct {
+	Values []json.RawMessage `json:"values,omitempty"`
+}
+
+type jsonKVListValue struct {
+	Values []keyValue `json:"values,omitempty"`
+}
+
+const maxAnyValueDepth = 64
+
+// Parse decodes either one OTLP/HTTP JSON trace request object or a trace-only
+// OTLP File Exporter JSON Lines stream. Unknown message fields are ignored as
+// required by OTLP JSON; known non-trace envelopes fail contextually.
 func Parse(r io.Reader) (model.Snapshot, error) {
-	var document *exportDocument
 	decoder := json.NewDecoder(r)
-	if err := decoder.Decode(&document); err != nil {
-		return model.Snapshot{}, fmt.Errorf("decode OTLP JSON: %w", err)
-	}
-	if document == nil {
-		return model.Snapshot{}, errors.New("decode OTLP JSON: expected a JSON object")
-	}
-
-	var trailing json.RawMessage
-	if err := decoder.Decode(&trailing); !errors.Is(err, io.EOF) {
-		if err == nil {
-			return model.Snapshot{}, errors.New("decode OTLP JSON: expected exactly one JSON document")
+	documents := make([]exportDocument, 0, 1)
+	for recordIndex := 0; ; recordIndex++ {
+		var raw json.RawMessage
+		if err := decoder.Decode(&raw); err != nil {
+			if errors.Is(err, io.EOF) {
+				if len(documents) == 0 {
+					return model.Snapshot{}, errors.New("decode OTLP JSON: input is empty")
+				}
+				break
+			}
+			return model.Snapshot{}, fmt.Errorf("decode OTLP JSON record[%d]: %w", recordIndex, err)
 		}
-		return model.Snapshot{}, fmt.Errorf("decode OTLP JSON trailing data: %w", err)
+		if err := validateTopLevelObject(raw); err != nil {
+			return model.Snapshot{}, fmt.Errorf("decode OTLP JSON record[%d]: %w", recordIndex, err)
+		}
+		var document exportDocument
+		if err := json.Unmarshal(raw, &document); err != nil {
+			return model.Snapshot{}, fmt.Errorf("decode OTLP JSON record[%d]: %w", recordIndex, err)
+		}
+		documents = append(documents, document)
 	}
 
-	return convert(*document)
+	return convertDocuments(documents)
+}
+
+func validateTopLevelObject(raw json.RawMessage) error {
+	trimmed := strings.TrimSpace(string(raw))
+	if trimmed == "null" || !strings.HasPrefix(trimmed, "{") {
+		return errors.New("expected a JSON object")
+	}
+	var fields map[string]json.RawMessage
+	if err := json.Unmarshal(raw, &fields); err != nil {
+		return err
+	}
+	for _, field := range []string{"resourceMetrics", "resourceLogs", "resourceProfiles"} {
+		if _, exists := fields[field]; exists {
+			return fmt.Errorf("field %s is not trace telemetry", field)
+		}
+	}
+	for _, field := range []string{"traces", "spans", "data"} {
+		if _, exists := fields[field]; exists {
+			return fmt.Errorf("field %s is an unsupported outer envelope", field)
+		}
+	}
+	return nil
+}
+
+func convertDocuments(documents []exportDocument) (model.Snapshot, error) {
+	if len(documents) == 1 {
+		return convert(documents[0])
+	}
+
+	result := model.Snapshot{}
+	traceIndexes := make(map[string]int)
+	seenSpans := make(map[string]struct{})
+	inputOrder := 0
+	for recordIndex, document := range documents {
+		snapshot, err := convert(document)
+		if err != nil {
+			return model.Snapshot{}, fmt.Errorf("validate OTLP JSON record[%d]: %w", recordIndex, err)
+		}
+		for _, trace := range snapshot.Traces {
+			traceIndex, exists := traceIndexes[trace.ID]
+			if !exists {
+				traceIndex = len(result.Traces)
+				traceIndexes[trace.ID] = traceIndex
+				result.Traces = append(result.Traces, model.Trace{ID: trace.ID})
+			}
+			for _, span := range trace.Spans {
+				identity := span.TraceID + "\x00" + span.SpanID
+				if _, exists := seenSpans[identity]; exists {
+					return model.Snapshot{}, fmt.Errorf("validate OTLP JSON record[%d]: duplicate spanId within its trace", recordIndex)
+				}
+				seenSpans[identity] = struct{}{}
+				span.InputOrder = inputOrder
+				inputOrder++
+				result.Traces[traceIndex].Spans = append(result.Traces[traceIndex].Spans, span)
+			}
+		}
+	}
+	return result, nil
 }
 
 func convert(document exportDocument) (model.Snapshot, error) {
@@ -237,11 +327,11 @@ func convertSpan(
 	if strings.TrimSpace(encoded.Name) == "" {
 		return model.Span{}, errors.New("name must not be empty")
 	}
-	if len(encoded.Events) > 0 {
-		return model.Span{}, errors.New("events are not supported by the current OTLP JSON subset")
+	if err := validateEvents(encoded.Events); err != nil {
+		return model.Span{}, err
 	}
-	if len(encoded.Links) > 0 {
-		return model.Span{}, errors.New("links are not supported by the current OTLP JSON subset")
+	if err := validateLinks(encoded.Links); err != nil {
+		return model.Span{}, err
 	}
 
 	kind, err := convertKind(encoded.Kind)
@@ -310,6 +400,48 @@ func convertSpan(
 		Scope:                  scopeContext,
 		ScopeSchemaURL:         scopeSchemaURL,
 	}, nil
+}
+
+func validateEvents(events []jsonEvent) error {
+	for index, event := range events {
+		if jsonValuePresent(event.TimeUnixNano) {
+			if _, err := parseRequiredUint64("timeUnixNano", event.TimeUnixNano); err != nil {
+				return fmt.Errorf("events[%d]: %w", index, err)
+			}
+		}
+		if _, err := convertAttributes(event.Attributes); err != nil {
+			return fmt.Errorf("events[%d].attributes: %w", index, err)
+		}
+		if _, err := parseOptionalUint32("droppedAttributesCount", event.DroppedAttributesCount); err != nil {
+			return fmt.Errorf("events[%d]: %w", index, err)
+		}
+	}
+	return nil
+}
+
+func validateLinks(links []jsonLink) error {
+	for index, link := range links {
+		if link.TraceID != "" {
+			if err := validateHexID("traceId", link.TraceID, 16); err != nil {
+				return fmt.Errorf("links[%d]: %w", index, err)
+			}
+		}
+		if link.SpanID != "" {
+			if err := validateHexID("spanId", link.SpanID, 8); err != nil {
+				return fmt.Errorf("links[%d]: %w", index, err)
+			}
+		}
+		if _, err := convertAttributes(link.Attributes); err != nil {
+			return fmt.Errorf("links[%d].attributes: %w", index, err)
+		}
+		if _, err := parseOptionalUint32("droppedAttributesCount", link.DroppedAttributesCount); err != nil {
+			return fmt.Errorf("links[%d]: %w", index, err)
+		}
+		if _, err := parseOptionalUint32("flags", link.Flags); err != nil {
+			return fmt.Errorf("links[%d]: %w", index, err)
+		}
+	}
+	return nil
 }
 
 func validateHexID(field, value string, byteLength int) error {
@@ -490,21 +622,21 @@ func convertAttributes(attributes []keyValue) (model.Attributes, error) {
 }
 
 func convertAnyValue(raw json.RawMessage) (model.AttributeValue, error) {
+	return convertAnyValueAtDepth(raw, 0)
+}
+
+func convertAnyValueAtDepth(raw json.RawMessage, depth int) (model.AttributeValue, error) {
+	if depth >= maxAnyValueDepth {
+		return model.AttributeValue{}, fmt.Errorf("nested AnyValue exceeds maximum depth %d", maxAnyValueDepth)
+	}
 	if !jsonValuePresent(raw) {
-		return model.AttributeValue{}, errors.New("value must contain exactly one supported OTLP primitive value")
+		return model.AttributeValue{}, errors.New("value must contain exactly one OTLP AnyValue case")
 	}
 
 	var encoded anyValue
 	if err := json.Unmarshal(raw, &encoded); err != nil {
 		return model.AttributeValue{}, fmt.Errorf("decode value: %w", err)
 	}
-	if jsonValuePresent(encoded.ArrayValue) {
-		return model.AttributeValue{}, errors.New("arrayValue is not supported by the current OTLP JSON subset")
-	}
-	if jsonValuePresent(encoded.KVListValue) {
-		return model.AttributeValue{}, errors.New("kvlistValue is not supported by the current OTLP JSON subset")
-	}
-
 	present := 0
 	if encoded.StringValue != nil {
 		present++
@@ -521,8 +653,14 @@ func convertAnyValue(raw json.RawMessage) (model.AttributeValue, error) {
 	if encoded.BytesValue != nil {
 		present++
 	}
+	if encoded.ArrayValue != nil {
+		present++
+	}
+	if encoded.KVListValue != nil {
+		present++
+	}
 	if present != 1 {
-		return model.AttributeValue{}, errors.New("value must contain exactly one supported OTLP primitive value")
+		return model.AttributeValue{}, errors.New("value must contain exactly one OTLP AnyValue case")
 	}
 
 	switch {
@@ -542,12 +680,35 @@ func convertAnyValue(raw json.RawMessage) (model.AttributeValue, error) {
 			return model.AttributeValue{}, fmt.Errorf("doubleValue: %w", err)
 		}
 		return model.AttributeValue{Type: model.AttributeValueDouble, DoubleValue: value}, nil
-	default:
+	case encoded.BytesValue != nil:
 		value, err := decodeBytes(*encoded.BytesValue)
 		if err != nil {
 			return model.AttributeValue{}, err
 		}
 		return model.AttributeValue{Type: model.AttributeValueBytes, BytesValue: value}, nil
+	case encoded.ArrayValue != nil:
+		values := make([]model.AttributeValue, len(encoded.ArrayValue.Values))
+		for index, rawValue := range encoded.ArrayValue.Values {
+			value, err := convertAnyValueAtDepth(rawValue, depth+1)
+			if err != nil {
+				return model.AttributeValue{}, fmt.Errorf("arrayValue.values[%d]: %w", index, err)
+			}
+			values[index] = value
+		}
+		return model.AttributeValue{Type: model.AttributeValueArray, ArrayValue: values}, nil
+	default:
+		values := make([]model.AttributeKeyValue, len(encoded.KVListValue.Values))
+		for index, encodedValue := range encoded.KVListValue.Values {
+			if strings.TrimSpace(encodedValue.Key) == "" {
+				return model.AttributeValue{}, fmt.Errorf("kvlistValue.values[%d].key must not be empty", index)
+			}
+			value, err := convertAnyValueAtDepth(encodedValue.Value, depth+1)
+			if err != nil {
+				return model.AttributeValue{}, fmt.Errorf("kvlistValue.values[%d] %q: %w", index, encodedValue.Key, err)
+			}
+			values[index] = model.AttributeKeyValue{Key: encodedValue.Key, Value: value}
+		}
+		return model.AttributeValue{Type: model.AttributeValueKVList, KVListValue: values}, nil
 	}
 }
 

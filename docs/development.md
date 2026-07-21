@@ -34,6 +34,7 @@ The default Make target prints help.
 | `make build` | Build the CLI. |
 | `make test` | Run all Go tests. |
 | `make test-race` | Run tests with the race detector. |
+| `make test-fuzz-smoke` | Run bounded parser, matcher, and reporter fuzz targets. |
 | `make fmt` | Apply `gofmt` to Go files. |
 | `make fmt-check` | Fail if a Go file is not formatted. |
 | `make vet` | Run `go vet ./...`. |
@@ -98,6 +99,14 @@ Unit tests should live next to the package they exercise. End-to-end behavior ma
 All fixtures must be synthetic. Never commit production traces, real credentials, personal data, internal hostnames, or proprietary query text. When a test needs a sensitive-looking field, use an unmistakably fictional value and assert that it is redacted or excluded.
 
 Prefer small inline values for one-field unit cases and JSON fixtures when the wire shape itself matters. Keep golden output reviewable and regenerate it only as part of an intentional contract change.
+
+The release-focused fuzz smoke is intentionally bounded and complementary to table tests:
+
+```bash
+bash ./scripts/fuzz-smoke.sh
+```
+
+It fuzzes arbitrary parser bytes, trace-order-independent matching, and cross-format reporter escaping for two seconds each. A fuzz failure writes a reproducible corpus entry through the normal Go fuzz mechanism; investigate and retain a minimal synthetic regression seed. Longer fuzz campaigns are useful before releases but are not a substitute for the exact bounded CI gate.
 
 ## Running the example and checking its exit
 

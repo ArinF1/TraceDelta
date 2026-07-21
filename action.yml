@@ -1,0 +1,79 @@
+name: TraceDelta comparison
+description: Compare baseline and candidate OpenTelemetry trace artifacts and produce safe JSON and HTML reports.
+author: TraceDelta contributors
+
+inputs:
+  baseline:
+    description: Path to the baseline OTLP JSON or trace-only File Exporter JSONL artifact.
+    required: true
+  candidate:
+    description: Path to the candidate OTLP JSON or trace-only File Exporter JSONL artifact.
+    required: true
+  report-directory:
+    description: New directory in which to create the JSON and HTML reports.
+    required: false
+    default: tracedelta-reports
+  duration-threshold:
+    description: Minimum relative candidate latency increase, written as a percentage.
+    required: false
+    default: 20%
+  duration-threshold-absolute:
+    description: Minimum absolute candidate latency increase, written as a Go duration.
+    required: false
+    default: 10ms
+  redact-attributes:
+    description: Optional newline-separated exact attribute keys to redact in addition to built-in rules.
+    required: false
+    default: ""
+
+outputs:
+  outcome:
+    description: "Comparison outcome: no_differences, differences, or error."
+    value: ${{ steps.compare.outputs.outcome }}
+  exit-code:
+    description: "TraceDelta result code: 0 for no differences, 1 for differences, or 2 for tool/input failure."
+    value: ${{ steps.compare.outputs.exit-code }}
+  report-directory:
+    description: Directory containing all three reports for completed comparisons.
+    value: ${{ steps.compare.outputs.report-directory }}
+  text-report:
+    description: Path to the terminal text report for a completed comparison.
+    value: ${{ steps.compare.outputs.text-report }}
+  json-report:
+    description: Path to the JSON report for a completed comparison.
+    value: ${{ steps.compare.outputs.json-report }}
+  html-report:
+    description: Path to the standalone HTML report for a completed comparison.
+    value: ${{ steps.compare.outputs.html-report }}
+
+runs:
+  using: composite
+  steps:
+    - id: build
+      name: Build pinned TraceDelta source
+      shell: bash
+      env:
+        TRACEDELTA_ACTION_ROOT: ${{ github.action_path }}
+      run: |
+        build_directory="$(mktemp -d "${RUNNER_TEMP}/tracedelta-action.XXXXXX")"
+        binary="${build_directory}/tracedelta"
+        (cd "${TRACEDELTA_ACTION_ROOT}" && go build -trimpath -o "${binary}" ./cmd/tracedelta)
+        printf 'binary=%s\n' "${binary}" >> "${GITHUB_OUTPUT}"
+
+    - id: compare
+      name: Compare trace artifacts
+      shell: bash
+      env:
+        TRACEDELTA_ACTION_BINARY: ${{ steps.build.outputs.binary }}
+        TRACEDELTA_ACTION_BASELINE: ${{ inputs.baseline }}
+        TRACEDELTA_ACTION_CANDIDATE: ${{ inputs.candidate }}
+        TRACEDELTA_ACTION_REPORT_DIRECTORY: ${{ inputs.report-directory }}
+        TRACEDELTA_ACTION_DURATION_THRESHOLD: ${{ inputs.duration-threshold }}
+        TRACEDELTA_ACTION_DURATION_THRESHOLD_ABSOLUTE: ${{ inputs.duration-threshold-absolute }}
+        TRACEDELTA_ACTION_REDACT_ATTRIBUTES: ${{ inputs.redact-attributes }}
+        TRACEDELTA_ACTION_ROOT: ${{ github.action_path }}
+      run: bash "${TRACEDELTA_ACTION_ROOT}/scripts/run-action.sh"
+
+branding:
+  icon: activity
+  color: blue

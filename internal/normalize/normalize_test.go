@@ -265,6 +265,63 @@ func TestCanonicalAttributesAreSelectedSortedAndTyped(t *testing.T) {
 	}
 }
 
+func TestCanonicalAttributesIgnoreCompositeValues(t *testing.T) {
+	attributes := model.Attributes{
+		"http.route": {
+			Type: model.AttributeValueArray,
+			ArrayValue: []model.AttributeValue{
+				{Type: model.AttributeValueString, StringValue: "/checkout"},
+			},
+		},
+		"request.id": {Type: model.AttributeValueString, StringValue: "synthetic-run-id"},
+	}
+
+	got, err := canonicalAttributes(attributes)
+	if err != nil {
+		t.Fatalf("canonicalAttributes() error = %v", err)
+	}
+	if len(got) != 0 {
+		t.Fatalf("canonicalAttributes() = %#v, want composite and unsafe values omitted", got)
+	}
+}
+
+func TestSnapshotExtractsStringErrorTypeOutsideMatchAttributes(t *testing.T) {
+	input := model.Snapshot{Traces: []model.Trace{{Spans: []model.Span{{
+		SpanID: "span",
+		Name:   "operation",
+		Status: model.StatusError,
+		Attributes: model.Attributes{
+			"error.type":        {Type: model.AttributeValueString, StringValue: "synthetic.Declined"},
+			"exception.message": {Type: model.AttributeValueString, StringValue: "synthetic private detail"},
+		},
+	}}}}}
+
+	got, err := Snapshot(input, Options{})
+	if err != nil {
+		t.Fatalf("Snapshot() error = %v", err)
+	}
+	span := got.Traces[0].Spans[0]
+	if !span.ErrorTypePresent || span.ErrorType != "synthetic.Declined" {
+		t.Fatalf("normalized error evidence = %q/%t, want synthetic.Declined/present", span.ErrorType, span.ErrorTypePresent)
+	}
+	if len(span.Attributes) != 0 {
+		t.Fatalf("normalized match attributes = %#v, want error evidence excluded", span.Attributes)
+	}
+	encoded := string(marshalSnapshot(t, got))
+	if strings.Contains(encoded, "synthetic private detail") {
+		t.Fatalf("normalized snapshot contains exception message: %s", encoded)
+	}
+
+	input.Traces[0].Spans[0].Attributes["error.type"] = model.AttributeValue{Type: model.AttributeValueInt, IntValue: 7}
+	got, err = Snapshot(input, Options{})
+	if err != nil {
+		t.Fatalf("Snapshot(non-string error.type) error = %v", err)
+	}
+	if got.Traces[0].Spans[0].ErrorTypePresent {
+		t.Fatalf("non-string error.type became evidence: %#v", got.Traces[0].Spans[0])
+	}
+}
+
 func TestCanonicalDoubleValues(t *testing.T) {
 	tests := []struct {
 		name  string

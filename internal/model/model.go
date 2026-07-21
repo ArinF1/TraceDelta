@@ -3,7 +3,7 @@ package model
 
 import "time"
 
-// AttributeValueType identifies the OTLP primitive stored in an attribute.
+// AttributeValueType identifies the OTLP value form stored in an attribute.
 type AttributeValueType string
 
 const (
@@ -17,9 +17,19 @@ const (
 	AttributeValueDouble AttributeValueType = "double"
 	// AttributeValueBytes is an OTLP bytesValue.
 	AttributeValueBytes AttributeValueType = "bytes"
+	// AttributeValueArray is an OTLP arrayValue.
+	AttributeValueArray AttributeValueType = "array"
+	// AttributeValueKVList is an OTLP kvlistValue.
+	AttributeValueKVList AttributeValueType = "kvlist"
 )
 
-// AttributeValue preserves the type of one supported OTLP primitive value.
+// AttributeKeyValue preserves one entry in a nested OTLP key-value list.
+type AttributeKeyValue struct {
+	Key   string
+	Value AttributeValue
+}
+
+// AttributeValue preserves the type of one supported OTLP AnyValue.
 // Exactly one value field is meaningful according to Type.
 type AttributeValue struct {
 	Type        AttributeValueType
@@ -28,6 +38,8 @@ type AttributeValue struct {
 	IntValue    int64
 	DoubleValue float64
 	BytesValue  []byte
+	ArrayValue  []AttributeValue
+	KVListValue []AttributeKeyValue
 }
 
 // Attributes is a validated set of unique OTLP key/value attributes.
@@ -141,7 +153,11 @@ type NormalizedSpan struct {
 	StartOrder int
 	Duration   time.Duration
 	Status     StatusCode
-	Attributes []NormalizedAttribute
+	// ErrorType is safe diff evidence only and never participates in matching.
+	// ErrorTypePresent distinguishes an absent attribute from an empty string.
+	ErrorType        string
+	ErrorTypePresent bool
+	Attributes       []NormalizedAttribute
 }
 
 // NormalizedTrace is one trace after raw identifiers and absolute timestamps

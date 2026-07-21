@@ -1,6 +1,23 @@
 # Release process
 
-TraceDelta has no published release and no automated publishing workflow. This document defines a conservative manual process for future releases; adding release automation is a separate reviewed task.
+TraceDelta has no published release yet. The release workflow performs a read-only five-target dry run when manually dispatched and publishes only for pushed `v*` tags. Its build job has `contents: read`; only the tag-gated publish job receives `contents: write`.
+
+## Release artifacts
+
+For `v0.1.0`, the workflow produces exactly:
+
+```text
+tracedelta_0.1.0_linux_amd64
+tracedelta_0.1.0_linux_arm64
+tracedelta_0.1.0_darwin_amd64
+tracedelta_0.1.0_darwin_arm64
+tracedelta_0.1.0_windows_amd64.exe
+tracedelta_0.1.0_checksums.txt
+```
+
+All binaries are `CGO_ENABLED=0`, trimmed-path Go builds from the tagged source. The checksum file uses SHA-256 and relative artifact names. The workflow verifies checksums before upload and again after the tag job downloads the build artifact. v0.1 does not promise signing, package-manager publication, an SBOM, or a container image.
+
+Run the exact five-target build locally with `make test-release-smoke`, or manually dispatch `.github/workflows/release.yml` with a non-release label such as `v0.1.0-test`. A manual dispatch uploads a short-lived workflow artifact and never enters the publish job.
 
 ## Versioning
 
@@ -33,26 +50,43 @@ Run at minimum:
 make clean
 make check
 make test-race
-go build ./cmd/tracedelta
+bash ./scripts/fuzz-smoke.sh
+
+build_dir="$(mktemp -d)"
+go build -trimpath -o "${build_dir}/tracedelta" ./cmd/tracedelta
+bash ./scripts/ci-compare.smoke.sh "${build_dir}/tracedelta"
+bash ./scripts/run-action.smoke.sh "${build_dir}/tracedelta"
 ```
+
+Expected outcomes:
+
+| Gate | Required result |
+| --- | --- |
+| Essential suite | Formatting, all packages, vet, and CLI build pass. |
+| Race suite | Every package passes under `-race`. |
+| Fuzz smoke | Parser, matcher determinism, and reporter escaping each complete their bounded fuzz interval without a crash or invariant failure. |
+| Generic CLI smoke | Pass returns `0` with JSON/HTML reports, regression returns `1` with reports, invalid/missing input returns `2` without reports. |
+| Action entry smoke | Pass and regression complete with mutually consistent text/JSON/HTML reports and structured outputs; missing input returns/fails with `2` and no report. |
+| Composite Action CI | Local Action invocations prove pass `0`, regression `1`, and failing tool/input `2` behavior through GitHub's actual composite-step/output semantics. |
+| Deliberate example | Normal repository jobs pass; `compare-example` fails on the four documented findings after uploading all three reports. |
 
 Then run the documented example and confirm its output and exit code with a built binary. For a report-format release, inspect every generated artifact and run format-specific escaping/schema tests.
 
 Record exact commands, toolchain version, and outcomes in `docs/current-state.md` and append a session-log entry. An unrun check must never be recorded as passing.
 
-## Manual release steps
+## Release steps
 
 1. Choose the version from demonstrated compatibility and scope.
 2. Move relevant `CHANGELOG.md` entries from **Unreleased** into a dated version section.
 3. Update version references and project state.
 4. Re-run readiness and verification from the exact release commit.
-5. Have another maintainer review the changelog, security contact, generated artifacts, and tag target.
-6. Create a signed or annotated Git tag named `vX.Y.Z` from the reviewed commit.
-7. Push the tag and create a GitHub release whose notes are derived from the changelog.
-8. Verify downloadable artifacts/checksums if binary distribution has been separately implemented.
+5. Have another maintainer review the changelog, security contact, generated artifacts, and tag target when a second maintainer is available; until then, record the single-maintainer review limitation.
+6. Create an annotated Git tag named `vX.Y.Z` from the reviewed commit.
+7. Push the tag and let the reviewed release workflow create a GitHub release whose notes are derived from the changelog.
+8. Download every published target artifact and verify it against the published SHA-256 checksums.
 9. Restore an empty **Unreleased** section and update the development version on the next change.
 
-Do not publish binaries from an unreviewed developer workstation workflow and do not add credentials to the repository to automate these steps.
+Do not publish binaries from an unreviewed developer workstation workflow and do not add credentials to the repository to automate these steps. The tag workflow uses only GitHub's scoped job token and immutable commit pins for official actions.
 
 ## Rollback and corrections
 
