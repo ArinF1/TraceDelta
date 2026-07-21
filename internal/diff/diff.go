@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/ArinF1/TraceDelta/internal/match"
+	"github.com/ArinF1/TraceDelta/internal/model"
 )
 
 // Kind classifies a reported change.
@@ -30,6 +31,9 @@ const (
 	FieldNone Field = ""
 	// FieldStatus identifies an OpenTelemetry status-code change.
 	FieldStatus Field = "status"
+	// FieldErrorType identifies a changed safe error.type value while both
+	// matched spans have ERROR status.
+	FieldErrorType Field = "error.type"
 	// FieldDuration identifies a meaningful duration change.
 	FieldDuration Field = "duration"
 )
@@ -43,6 +47,14 @@ type Change struct {
 	Occurrence  int
 	Before      string
 	After       string
+	// BeforePresent and AfterPresent distinguish absent evidence from a
+	// present empty value. Added/removed changes have no before/after evidence.
+	BeforePresent bool
+	AfterPresent  bool
+	// Duration thresholds are populated only for duration findings so every
+	// report can render the effective policy that produced the finding.
+	DurationThresholdRelative float64
+	DurationThresholdAbsolute time.Duration
 }
 
 // Result summarizes all meaningful differences in a comparison.
@@ -62,12 +74,17 @@ func (result Result) HasDifferences() bool {
 type Options struct {
 	// DurationThreshold is a non-negative relative ratio, where 0.20 means 20%.
 	DurationThreshold float64
+	// DurationThresholdAbsolute is the minimum absolute candidate increase.
+	DurationThresholdAbsolute time.Duration
 }
 
 // Compare detects additions, removals, status changes, and duration changes.
 func Compare(matches match.Result, options Options) (Result, error) {
 	if options.DurationThreshold < 0 || math.IsNaN(options.DurationThreshold) || math.IsInf(options.DurationThreshold, 0) {
 		return Result{}, fmt.Errorf("duration threshold must be a finite, non-negative ratio")
+	}
+	if options.DurationThresholdAbsolute < 0 {
+		return Result{}, fmt.Errorf("absolute duration threshold must be non-negative")
 	}
 
 	result := Result{
@@ -97,25 +114,45 @@ func Compare(matches match.Result, options Options) (Result, error) {
 		if pair.Baseline.Status != pair.Candidate.Status {
 			changed = true
 			result.Changes = append(result.Changes, Change{
-				Kind:        KindChanged,
-				Field:       FieldStatus,
-				SpanName:    pair.Baseline.Key.Name,
-				ServiceName: pair.Baseline.Key.ServiceName,
-				Occurrence:  pair.Baseline.Occurrence,
-				Before:      string(pair.Baseline.Status),
-				After:       string(pair.Candidate.Status),
+				Kind:          KindChanged,
+				Field:         FieldStatus,
+				SpanName:      pair.Baseline.Key.Name,
+				ServiceName:   pair.Baseline.Key.ServiceName,
+				Occurrence:    pair.Baseline.Occurrence,
+				Before:        string(pair.Baseline.Status),
+				After:         string(pair.Candidate.Status),
+				BeforePresent: true,
+				AfterPresent:  true,
 			})
 		}
-		if durationChanged(pair.Baseline.Duration, pair.Candidate.Duration, options.DurationThreshold) {
+		if errorTypeChanged(pair.Baseline, pair.Candidate) {
 			changed = true
 			result.Changes = append(result.Changes, Change{
-				Kind:        KindChanged,
-				Field:       FieldDuration,
-				SpanName:    pair.Baseline.Key.Name,
-				ServiceName: pair.Baseline.Key.ServiceName,
-				Occurrence:  pair.Baseline.Occurrence,
-				Before:      pair.Baseline.Duration.String(),
-				After:       pair.Candidate.Duration.String(),
+				Kind:          KindChanged,
+				Field:         FieldErrorType,
+				SpanName:      pair.Baseline.Key.Name,
+				ServiceName:   pair.Baseline.Key.ServiceName,
+				Occurrence:    pair.Baseline.Occurrence,
+				Before:        pair.Baseline.ErrorType,
+				After:         pair.Candidate.ErrorType,
+				BeforePresent: pair.Baseline.ErrorTypePresent,
+				AfterPresent:  pair.Candidate.ErrorTypePresent,
+			})
+		}
+		if durationChanged(pair.Baseline.Duration, pair.Candidate.Duration, options.DurationThreshold, options.DurationThresholdAbsolute) {
+			changed = true
+			result.Changes = append(result.Changes, Change{
+				Kind:                      KindChanged,
+				Field:                     FieldDuration,
+				SpanName:                  pair.Baseline.Key.Name,
+				ServiceName:               pair.Baseline.Key.ServiceName,
+				Occurrence:                pair.Baseline.Occurrence,
+				Before:                    pair.Baseline.Duration.String(),
+				After:                     pair.Candidate.Duration.String(),
+				BeforePresent:             true,
+				AfterPresent:              true,
+				DurationThresholdRelative: options.DurationThreshold,
+				DurationThresholdAbsolute: options.DurationThresholdAbsolute,
 			})
 		}
 		if changed {
@@ -129,15 +166,25 @@ func Compare(matches match.Result, options Options) (Result, error) {
 	return result, nil
 }
 
-func durationChanged(baseline, candidate time.Duration, threshold float64) bool {
+func errorTypeChanged(baseline, candidate model.NormalizedSpan) bool {
+	if baseline.Status != model.StatusError || candidate.Status != model.StatusError {
+		return false
+	}
+	return baseline.ErrorTypePresent != candidate.ErrorTypePresent || baseline.ErrorType != candidate.ErrorType
+}
+
+func durationChanged(baseline, candidate time.Duration, relativeThreshold float64, absoluteThreshold time.Duration) bool {
 	if candidate <= baseline {
+		return false
+	}
+	difference := candidate - baseline
+	if difference < absoluteThreshold {
 		return false
 	}
 	if baseline == 0 {
 		return true
 	}
-	difference := float64(candidate) - float64(baseline)
-	return difference/float64(baseline) >= threshold
+	return float64(difference)/float64(baseline) >= relativeThreshold
 }
 
 func lessChange(left, right Change) bool {
@@ -173,8 +220,10 @@ func fieldRank(field Field) int {
 	switch field {
 	case FieldStatus:
 		return 0
-	case FieldDuration:
+	case FieldErrorType:
 		return 1
+	case FieldDuration:
+		return 2
 	default:
 		return 2
 	}

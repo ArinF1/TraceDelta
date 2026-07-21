@@ -46,6 +46,37 @@ jobs:
       - name: Build CLI
         run: go build ./cmd/tracedelta
 
+      - name: Smoke-test generic CI comparison
+        shell: bash
+        run: bash ./scripts/ci-compare.smoke.sh ./tracedelta
+
+      - name: Smoke-test Action entry point
+        shell: bash
+        run: bash ./scripts/run-action.smoke.sh ./tracedelta
+
+      - id: local-action
+        name: Exercise local composite Action
+        uses: ./
+        with:
+          baseline: testdata/baseline.json
+          candidate: testdata/candidate.json
+          report-directory: tracedelta-action-reports
+
+      - name: Verify local Action outputs
+        shell: bash
+        env:
+          TRACEDELTA_EXIT_CODE: ${{ steps.local-action.outputs.exit-code }}
+          TRACEDELTA_OUTCOME: ${{ steps.local-action.outputs.outcome }}
+          TRACEDELTA_TEXT_REPORT: ${{ steps.local-action.outputs.text-report }}
+          TRACEDELTA_JSON_REPORT: ${{ steps.local-action.outputs.json-report }}
+          TRACEDELTA_HTML_REPORT: ${{ steps.local-action.outputs.html-report }}
+        run: |
+          [[ "${TRACEDELTA_EXIT_CODE}" == "1" ]]
+          [[ "${TRACEDELTA_OUTCOME}" == "differences" ]]
+          [[ -s "${TRACEDELTA_TEXT_REPORT}" ]]
+          [[ -s "${TRACEDELTA_JSON_REPORT}" ]]
+          [[ -s "${TRACEDELTA_HTML_REPORT}" ]]
+
   windows-verify:
     name: Windows validation watchdog
     runs-on: windows-latest

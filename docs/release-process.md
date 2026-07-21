@@ -1,6 +1,6 @@
 # Release process
 
-TraceDelta has no published release and no automated publishing workflow. This document defines a conservative manual process for future releases; adding release automation is a separate reviewed task.
+TraceDelta has no published release and no automated publishing workflow. Versioned binaries and checksum-producing tag automation are required for v0.1 under TD-033; until that task is complete, this document describes the conservative release controls the workflow must preserve.
 
 ## Versioning
 
@@ -40,19 +40,19 @@ Then run the documented example and confirm its output and exit code with a buil
 
 Record exact commands, toolchain version, and outcomes in `docs/current-state.md` and append a session-log entry. An unrun check must never be recorded as passing.
 
-## Manual release steps
+## Release steps
 
 1. Choose the version from demonstrated compatibility and scope.
 2. Move relevant `CHANGELOG.md` entries from **Unreleased** into a dated version section.
 3. Update version references and project state.
 4. Re-run readiness and verification from the exact release commit.
-5. Have another maintainer review the changelog, security contact, generated artifacts, and tag target.
-6. Create a signed or annotated Git tag named `vX.Y.Z` from the reviewed commit.
-7. Push the tag and create a GitHub release whose notes are derived from the changelog.
-8. Verify downloadable artifacts/checksums if binary distribution has been separately implemented.
+5. Have another maintainer review the changelog, security contact, generated artifacts, and tag target when a second maintainer is available; until then, record the single-maintainer review limitation.
+6. Create an annotated Git tag named `vX.Y.Z` from the reviewed commit.
+7. Push the tag and let the reviewed release workflow create a GitHub release whose notes are derived from the changelog.
+8. Download every published target artifact and verify it against the published SHA-256 checksums.
 9. Restore an empty **Unreleased** section and update the development version on the next change.
 
-Do not publish binaries from an unreviewed developer workstation workflow and do not add credentials to the repository to automate these steps.
+Do not publish binaries from an unreviewed developer workstation workflow and do not add credentials to the repository to automate these steps. v0.1 does not promise artifact signing, package-manager distribution, an SBOM, or container images.
 
 ## Rollback and corrections
 

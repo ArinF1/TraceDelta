@@ -18,23 +18,30 @@ No future network behavior should be introduced silently. Any integration that t
 
 The repository's included fixtures are intended to be obviously fictional and safe to publish.
 
-## Attribute allowlists and denylists
+## Attribute evidence and denylists
 
-The initial vertical slice does not yet implement configurable attribute filtering or redaction. Before broad OTLP support is considered complete, TraceDelta should provide:
+TraceDelta applies deterministic key-based redaction immediately after parsing and before normalization, matching, diffing, or reporting. It deep-copies both parsed snapshots and removes denied entries from span, resource, scope, and recursively nested key/value-list attributes. Arrays are traversed so nested key/value lists are covered. Redaction does not mutate caller-owned parsed values.
 
-- conservative built-in handling for known credential and personal-data attribute names;
-- user-defined allowlists for attributes permitted to influence matching and appear as evidence;
-- user-defined denylists that always take precedence over allowlists;
-- separation between an attribute being useful internally and being safe to render; and
-- tests proving excluded values do not leak through text, JSON, HTML, errors, or debug output.
+Built-in rules are case-insensitive and conservatively remove:
 
-Safe defaults should favor semantic keys such as HTTP route templates and database operation names over raw URLs, statements, or bound values.
+- all `http.request.header.*` and `http.response.header.*` attributes;
+- `user.*`, `enduser.*`, `person.*`, `session.*`, `account.*`, `contact.*`, `customer.*`, and `device.*` namespaces;
+- raw address, URL, query/statement, connection-string, user-agent, error-message, and exception-message/stack keys documented in the implementation; and
+- keys whose normalized segments contain common credential or personal-data markers such as API key, authorization, cookie, credential, email, password, phone, private key, secret, SSN, or token.
 
-## Future redaction
+Go embedding callers can add exact denylisted keys through `tracedelta.Options.RedactedAttributeKeys`. Matching is case-insensitive and surrounding whitespace in configured keys is ignored. An empty configured key fails without rendering trace values. Caller rules always override the fixed safe evidence set: denying `http.route`, an RPC key, `error.type`, or `service.name` removes it before evidence construction. Denying `service.name` also clears the derived service field.
 
-Redaction should occur immediately after parsing and before matching evidence or diff findings are constructed. Replacing a value only in the final renderer is insufficient because it can still leak through errors, intermediate objects, alternate formats, or logs.
+CLI callers can supply the same narrowing policy with repeatable `--redact-attribute KEY` flags. There is intentionally no option to add evidence keys or load an arbitrary policy/configuration file.
 
-Planned redaction needs deterministic replacement, documented precedence, protection across nested OTLP attribute values, and explicit behavior for malformed values. TraceDelta should not claim that an export is anonymized merely because common fields were removed.
+The fixed matching set remains `http.request.method`, `http.route`, `rpc.method`, and `rpc.service`. A string `error.type` is safe error evidence but is excluded from identity; non-string forms are treated as missing and callers may deny the key. Composite values under safe keys are not serialized into evidence. General user-defined evidence allowlists are deferred because they can silently broaden disclosure.
+
+Removal rather than a visible placeholder is intentional: a constant replacement could still make a caller-denied key influence correspondence. Text, JSON, and HTML consume the sanitized comparison-result model rather than parsed spans. JSON escapes control and HTML-significant characters; HTML uses contextual templating, inline CSS, and no active/external content. Input paths and safe span/service metadata can still be sensitive.
+
+## Residual risk
+
+Key-based redaction reduces accidental disclosure; it is not anonymization. Custom attributes can carry sensitive values under harmless-looking keys, and span names, service names, route templates, RPC names, file paths, schema URLs, trace state, status text, or other non-attribute fields can themselves be sensitive or malformed. The current comparison model drops most of those fields, and status messages are not evidence, but users must still sanitize source telemetry and use `RedactedAttributeKeys` for organization-specific attributes.
+
+Parser validation occurs before redaction and may identify a failing field or attribute key, though it does not dump attribute values. Input trace files remain sensitive on disk. Replacing a value only in a renderer would be insufficient, which is why the implemented stage sits before every evidence-producing component.
 
 ## Threat model
 
@@ -58,7 +65,10 @@ TraceDelta does not protect a compromised machine, malicious Go toolchain, or al
 - Use short artifact retention and restricted access where the CI platform permits it.
 - Do not echo entire input files on failure.
 - Treat exit code `1` as a behavioral result and `2` as a tool/input failure; neither justifies dumping raw traces.
-- Give GitHub Actions only the permissions needed for checkout and, when eventually implemented, an explicit pull-request summary.
+- Give the reusable GitHub Action read-only repository permissions and no secrets by default. v0.1 uses normal job summaries and artifacts rather than calling pull-request comment/check APIs.
+- Prefer `--output` for report artifacts so trace-derived content is not echoed into logs. Existing files are not replaced without `--force`, and neither input trace can be selected as the output target.
+- The generic CI wrapper writes only to a newly created report directory, logs only status and artifact paths, preserves reports only for completed exit `0`/`1` comparisons, and removes partial reports on exit `2`. Configure artifact upload to run after exit `1`, but never print the input or report contents as a debugging shortcut.
+- Pin the reusable Action to a versioned ref, grant only `contents: read`, disable persisted checkout credentials, and use `pull_request` rather than privileged `pull_request_target` for untrusted forks. The Action builds only its pinned `github.action_path`, passes values through shell arrays, and requires no secret; caller-controlled trace generation remains untrusted code.
 
 ## Responsible disclosure
 

@@ -1,136 +1,67 @@
 # TraceDelta roadmap
 
-This roadmap describes capability phases, not commitments to dates. A phase exits only when its criteria are demonstrated by tests and documentation. The prioritized execution order lives in [`docs/tasks.md`](docs/tasks.md).
+This roadmap defines a finite v0.1 release, not an expanding sequence of desirable features. The prioritized task details live in [`docs/tasks.md`](docs/tasks.md), and the release boundary is fixed by [ADR 0002](docs/decisions/0002-v0.1-release-boundary.md).
 
-## Phase 0: repository foundation
+## Already established
 
-### Goals
+The repository foundation, local comparison vertical slice, representative typed OTLP JSON parsing, deterministic trace-preserving normalization, checks, and public project governance are complete. The current implementation is still `v0.1.0-dev`; these foundations are not a published release.
 
-Establish a small, credible open-source Go project and prove one complete local comparison path.
+## v0.1 release sequence
 
-### Deliverables
+### 1. Trustworthy input and correspondence
 
-- Documented product, architecture, CLI, security, and contribution contracts.
-- Typed parsing of the simplified synthetic fixture format.
-- Deterministic detection and text reporting for added/removed spans, status changes, and duration changes.
-- Tests, local checks, and continuous integration scaffolding.
+- Accept one OTLP/HTTP JSON request object or a trace-only OTLP File Exporter JSONL stream, including multiple resource/scope groups and traces, nested attribute values, events, and links.
+- Match corresponding traces and spans deterministically using normalized structure and safe semantic evidence.
+- Surface unresolved ambiguity instead of using raw generated IDs or arbitrary input order.
 
-### Exit criteria
+Exit gate: reordered equivalent inputs compare identically; repeated operations are one-to-one; unsupported envelopes fail with actionable diagnostics.
 
-- The repository builds and all documented checks pass.
-- The example comparison deterministically exits `1` and explains why.
-- A new contributor can identify current behavior and the next task from repository files alone.
+### 2. Bounded regression rules and privacy
 
-## Phase 1: reliable local comparison
+- Detect added and removed spans.
+- Detect error-state changes using span status and the safe `error.type` attribute, never error messages or stack traces.
+- Detect candidate latency regressions only when configurable relative and absolute thresholds are both met; default to `20%` and `10ms`.
+- Redact built-in credential/personal-data keys and caller-supplied denylisted keys before matching evidence or findings are created.
 
-### Goals
+Exit gate: each rule has finding, non-finding, boundary, and deterministic-order tests; redacted values cannot reach terminal, JSON, HTML, or diagnostics covered by the comparison result.
 
-Accept representative OTLP JSON exports and remove nondeterministic telemetry details before comparison.
+### 3. Consistent reports and CLI policy
 
-### Deliverables
+- Render terminal, schema-versioned JSON, and standalone offline HTML from one result.
+- Provide bounded flags/configuration for latency thresholds, additional redacted keys, output destination, and safe overwrite behavior.
+- Preserve exit codes `0` (pass), `1` (regression), and `2` (invocation/input/tool failure).
 
-- Stronger OTLP JSON parsing across resource, scope, trace, and span data.
-- Configurable normalization of identifiers, timestamps, durations, and selected attributes.
-- Deterministic trace and span matching with explainable fallback behavior.
-- A larger synthetic compatibility fixture corpus.
+Exit gate: all formats contain the same ordered findings and policy outcome; JSON encoding and HTML escaping have contract tests.
 
-### Exit criteria
+### 4. Reusable pull-request workflow
 
-- Equivalent exports with different IDs and timestamps compare as equivalent.
-- Ambiguous and unmatched telemetry is reported explicitly rather than guessed silently.
-- Malformed and unsupported data produces actionable errors.
+- Package a least-privilege reusable GitHub Action for caller-supplied baseline and candidate artifacts.
+- Add a synthetic example application and a deliberately regressed public pull request that exercises every v0.1 finding category.
+- Add end-to-end integration coverage and the useful race/fuzz gates around the completed workflow.
 
-## Phase 2: semantic runtime diffing
+Exit gate: the example pull request distinguishes regression exit `1` from tool failure `2`, exposes no secret or production trace data, and preserves reports as reviewable artifacts.
 
-### Goals
+### 5. Publish v0.1
 
-Turn structural differences into behavior-oriented findings with stable severity and evidence.
+- Publish tagged binaries for Linux amd64/arm64, macOS amd64/arm64, and Windows amd64 with SHA-256 checksums.
+- Pin the reusable Action through the release tag and document installation/upgrade behavior.
+- Publish a reproducible 45–60 second demonstration linked from the README.
+- Complete the release checklist and update version/support documentation.
 
-### Deliverables
+Exit gate: a clean machine can download and verify a binary, reproduce the example comparison, and follow the one-minute demonstration using the published v0.1 tag.
 
-- Rules for service calls, span status, error attributes, and parent-child changes.
-- Database operation-shape comparison that avoids exposing query values.
-- Meaningful absolute and relative latency regression rules.
-- Configurable thresholds and regression policy.
+## Explicitly after v0.1
 
-### Exit criteria
+The following do not block v0.1:
 
-- Every supported rule has positive, negative, and deterministic-ordering tests.
-- Findings identify the matched context, before/after evidence, and rule that produced them.
-- Policy violations reliably control the process exit code.
+- database statement-shape comparison;
+- general service-call and parent/relationship change rules;
+- exhaustive OTLP/vendor/file-export compatibility;
+- hosted storage, dashboards, collectors, or automatic application execution;
+- metrics or log comparison;
+- pull-request comment/check APIs beyond normal Action summary/artifact behavior;
+- source attribution, statistical aggregation across repeated runs, or AI-generated findings;
+- a plugin/rule runtime; and
+- broad performance engineering beyond safe release input bounds.
 
-## Phase 3: report formats
-
-### Goals
-
-Make a single comparison result useful to humans and automation without duplicating diff logic.
-
-### Deliverables
-
-- A versioned machine-readable JSON report.
-- A self-contained HTML report with no external runtime dependency.
-- Output-file handling with safe overwrite behavior.
-- Consistency tests across text, JSON, and HTML renderers.
-
-### Exit criteria
-
-- All formats render the same ordered findings and summary counts.
-- The JSON schema is documented and compatibility policy is explicit.
-- The HTML report opens offline and safely escapes trace-derived content.
-
-## Phase 4: CI and GitHub integration
-
-### Goals
-
-Make TraceDelta predictable in generic CI and useful in GitHub pull-request workflows.
-
-### Deliverables
-
-- Documented headless invocation, artifact, and exit-code patterns.
-- A reusable GitHub Actions example that compares supplied trace artifacts.
-- Optional pull-request summary/check integration designed with least-privilege permissions.
-- Troubleshooting guidance for fixture collection and failed comparisons.
-
-### Exit criteria
-
-- A sample repository can run TraceDelta from clean baseline and candidate artifacts.
-- Forked pull requests do not receive unnecessary write permissions or secrets.
-- The integration distinguishes behavioral regressions from tool/input failures.
-
-## Phase 5: broader OpenTelemetry support
-
-### Goals
-
-Handle a wider set of valid telemetry producers without weakening deterministic behavior.
-
-### Deliverables
-
-- Compatibility coverage for common OTLP JSON exporter variants.
-- Richer HTTP, RPC, messaging, and database semantic-convention handling.
-- Multi-trace and repeated-operation matching improvements.
-- Bounded-resource behavior for larger trace sets.
-
-### Exit criteria
-
-- A documented compatibility matrix is backed by sanitized fixtures.
-- Unsupported constructs degrade with explicit diagnostics.
-- Representative large local inputs complete within documented resource bounds.
-
-## Phase 6: source attribution and advanced analysis
-
-### Goals
-
-Connect runtime findings to useful development context after the local semantic engine is trustworthy.
-
-### Deliverables
-
-- Optional source/commit attribution based on explicit telemetry metadata.
-- Cross-run aggregation and confidence explanations.
-- An extension mechanism for narrowly scoped analysis rules.
-- Research prototypes for advanced analysis, kept outside the stable contract until validated.
-
-### Exit criteria
-
-- Attribution is evidence-based and communicates uncertainty.
-- Extensions cannot bypass redaction or deterministic ordering contracts.
-- Advanced findings demonstrably improve review usefulness without requiring a hosted service.
+Post-v0.1 priorities will be selected from observed user needs rather than added to the first-release gate in advance.

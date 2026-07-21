@@ -4,6 +4,7 @@ package report
 import (
 	"fmt"
 	"io"
+	"strconv"
 	"strings"
 	"unicode"
 
@@ -35,8 +36,17 @@ func WriteText(w io.Writer, result diff.Result, metadata Metadata) error {
 			switch change.Field {
 			case diff.FieldStatus:
 				fmt.Fprintf(&output, " status %s -> %s", change.Before, change.After)
+			case diff.FieldErrorType:
+				fmt.Fprintf(&output, " error.type %s -> %s", formatEvidence(change.Before, change.BeforePresent), formatEvidence(change.After, change.AfterPresent))
 			case diff.FieldDuration:
-				fmt.Fprintf(&output, " duration %s -> %s", change.Before, change.After)
+				fmt.Fprintf(
+					&output,
+					" duration %s -> %s (thresholds: >=%s and >=%s)",
+					change.Before,
+					change.After,
+					formatPercentage(change.DurationThresholdRelative),
+					change.DurationThresholdAbsolute,
+				)
 			}
 			output.WriteByte('\n')
 		}
@@ -52,6 +62,20 @@ func WriteText(w io.Writer, result diff.Result, metadata Metadata) error {
 		return fmt.Errorf("write text report: %w", err)
 	}
 	return nil
+}
+
+func formatPercentage(ratio float64) string {
+	return strconv.FormatFloat(ratio*100, 'f', -1, 64) + "%"
+}
+
+func formatEvidence(value string, present bool) string {
+	if !present {
+		return "(missing)"
+	}
+	if value == "" {
+		return "(empty)"
+	}
+	return escapeControls(value)
 }
 
 func escapeControls(value string) string {

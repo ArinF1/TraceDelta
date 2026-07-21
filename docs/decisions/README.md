@@ -5,6 +5,7 @@ Architecture decision records (ADRs) preserve decisions that materially constrai
 ## Index
 
 - [0001 — Initial architecture](0001-initial-architecture.md) — Accepted
+- [0002 — Finite v0.1 release boundary](0002-v0.1-release-boundary.md) — Accepted
 
 ## Format
 

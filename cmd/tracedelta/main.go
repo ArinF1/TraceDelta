@@ -2,14 +2,18 @@
 package main
 
 import (
+	"bytes"
 	"errors"
 	"flag"
 	"fmt"
 	"io"
 	"math"
 	"os"
+	"path/filepath"
+	"runtime"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/ArinF1/TraceDelta/pkg/tracedelta"
 )
@@ -50,8 +54,12 @@ func runCompare(args []string, stdout, stderr io.Writer) int {
 	baselinePath := flags.String("baseline", "", "baseline OTLP JSON trace file (required)")
 	candidatePath := flags.String("candidate", "", "candidate OTLP JSON trace file (required)")
 	durationThreshold := flags.String("duration-threshold", "20%", "minimum relative duration increase to report")
-	format := flags.String("format", "text", "report format; currently only text")
-	output := flags.String("output", "", "planned output file path; not implemented in the current build")
+	durationThresholdAbsolute := flags.String("duration-threshold-absolute", "10ms", "minimum absolute duration increase to report")
+	format := flags.String("format", "text", "report format: text, json, or html")
+	output := flags.String("output", "", "write the report to this new file instead of stdout")
+	force := flags.Bool("force", false, "replace an existing --output file")
+	var redactedAttributes stringListFlag
+	flags.Var(&redactedAttributes, "redact-attribute", "additional attribute key to redact; repeatable")
 
 	if err := flags.Parse(args); err != nil {
 		if errors.Is(err, flag.ErrHelp) {
@@ -74,12 +82,16 @@ func runCompare(args []string, stdout, stderr io.Writer) int {
 		writeError(stderr, errors.New("--candidate is required"))
 		return exitUsageError
 	}
-	if *format != "text" {
-		writeError(stderr, fmt.Errorf("unsupported --format %q; the current build supports only text", *format))
+	if *format != "text" && *format != "json" && *format != "html" {
+		writeError(stderr, fmt.Errorf("unsupported --format %q; use text, json, or html", *format))
 		return exitUsageError
 	}
-	if *output != "" {
-		writeError(stderr, errors.New("--output is not implemented in the current build; omit it to write to stdout"))
+	if *force && *output == "" {
+		writeError(stderr, errors.New("--force requires --output"))
+		return exitUsageError
+	}
+	if err := validateOutputTarget(*output, *baselinePath, *candidatePath); err != nil {
+		writeError(stderr, err)
 		return exitUsageError
 	}
 
@@ -88,14 +100,35 @@ func runCompare(args []string, stdout, stderr io.Writer) int {
 		writeError(stderr, err)
 		return exitUsageError
 	}
+	absoluteThreshold, err := parseAbsoluteDurationThreshold(*durationThresholdAbsolute)
+	if err != nil {
+		writeError(stderr, err)
+		return exitUsageError
+	}
 	options := tracedelta.DefaultOptions()
 	options.DurationThreshold = threshold
+	options.DurationThresholdAbsolute = absoluteThreshold
+	options.RedactedAttributeKeys = append([]string(nil), redactedAttributes...)
 	comparison, err := tracedelta.CompareFiles(*baselinePath, *candidatePath, options)
 	if err != nil {
 		writeError(stderr, err)
 		return exitUsageError
 	}
-	if err := tracedelta.WriteText(stdout, comparison, *baselinePath, *candidatePath); err != nil {
+	var rendered bytes.Buffer
+	var reportError error
+	switch *format {
+	case "text":
+		reportError = tracedelta.WriteText(&rendered, comparison, *baselinePath, *candidatePath)
+	case "json":
+		reportError = tracedelta.WriteJSON(&rendered, comparison, *baselinePath, *candidatePath)
+	case "html":
+		reportError = tracedelta.WriteHTML(&rendered, comparison, *baselinePath, *candidatePath)
+	}
+	if reportError != nil {
+		writeError(stderr, reportError)
+		return exitUsageError
+	}
+	if err := writeReportOutput(stdout, *output, *force, rendered.Bytes()); err != nil {
 		writeError(stderr, err)
 		return exitUsageError
 	}
@@ -103,6 +136,118 @@ func runCompare(args []string, stdout, stderr io.Writer) int {
 		return exitDifferences
 	}
 	return exitNoDifferences
+}
+
+type stringListFlag []string
+
+func (values *stringListFlag) String() string {
+	return strings.Join(*values, ",")
+}
+
+func (values *stringListFlag) Set(value string) error {
+	trimmed := strings.TrimSpace(value)
+	if trimmed == "" {
+		return errors.New("attribute key must not be empty")
+	}
+	*values = append(*values, trimmed)
+	return nil
+}
+
+func validateOutputTarget(outputPath, baselinePath, candidatePath string) error {
+	if outputPath == "" {
+		return nil
+	}
+	for _, inputPath := range []string{baselinePath, candidatePath} {
+		same, err := sameFileTarget(outputPath, inputPath)
+		if err != nil {
+			return fmt.Errorf("validate --output path: %w", err)
+		}
+		if same {
+			return errors.New("--output must not refer to the baseline or candidate input")
+		}
+	}
+	return nil
+}
+
+func sameFileTarget(leftPath, rightPath string) (bool, error) {
+	leftAbsolute, err := filepath.Abs(leftPath)
+	if err != nil {
+		return false, err
+	}
+	rightAbsolute, err := filepath.Abs(rightPath)
+	if err != nil {
+		return false, err
+	}
+	if leftAbsolute == rightAbsolute || (runtime.GOOS == "windows" && strings.EqualFold(leftAbsolute, rightAbsolute)) {
+		return true, nil
+	}
+	leftInfo, leftErr := os.Stat(leftAbsolute)
+	rightInfo, rightErr := os.Stat(rightAbsolute)
+	if leftErr == nil && rightErr == nil && os.SameFile(leftInfo, rightInfo) {
+		return true, nil
+	}
+	if leftErr != nil && !errors.Is(leftErr, os.ErrNotExist) {
+		return false, leftErr
+	}
+	if rightErr != nil && !errors.Is(rightErr, os.ErrNotExist) {
+		return false, rightErr
+	}
+	return false, nil
+}
+
+func writeReportOutput(stdout io.Writer, outputPath string, force bool, contents []byte) error {
+	if outputPath == "" {
+		written, err := stdout.Write(contents)
+		if err != nil {
+			return fmt.Errorf("write report to stdout: %w", err)
+		}
+		if written != len(contents) {
+			return fmt.Errorf("write report to stdout: %w", io.ErrShortWrite)
+		}
+		return nil
+	}
+
+	flags := os.O_WRONLY | os.O_CREATE
+	if force {
+		flags |= os.O_TRUNC
+	} else {
+		flags |= os.O_EXCL
+	}
+	file, err := os.OpenFile(outputPath, flags, 0o600)
+	if err != nil {
+		if !force && errors.Is(err, os.ErrExist) {
+			return fmt.Errorf("refuse to overwrite existing output %q; pass --force to replace it", outputPath)
+		}
+		return fmt.Errorf("open output %q: %w", outputPath, err)
+	}
+	removeOnError := !force
+	written, err := file.Write(contents)
+	if err != nil || written != len(contents) {
+		file.Close()
+		if removeOnError {
+			_ = os.Remove(outputPath)
+		}
+		if err == nil {
+			err = io.ErrShortWrite
+		}
+		return fmt.Errorf("write output %q: %w", outputPath, err)
+	}
+	if err := file.Close(); err != nil {
+		if removeOnError {
+			_ = os.Remove(outputPath)
+		}
+		return fmt.Errorf("close output %q: %w", outputPath, err)
+	}
+	return nil
+}
+
+func parseAbsoluteDurationThreshold(value string) (time.Duration, error) {
+	trimmed := strings.TrimSpace(value)
+	duration, err := time.ParseDuration(trimmed)
+	if err != nil || duration < 0 {
+		return 0, fmt.Errorf("invalid --duration-threshold-absolute %q; use a non-negative duration such as 10ms", value)
+	}
+	return duration, nil
 }
 
 func parseDurationThreshold(value string) (float64, error) {

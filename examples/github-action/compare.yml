@@ -1,0 +1,62 @@
+name: TraceDelta
+
+on:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  compare-traces:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Check out candidate
+        uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+
+      - name: Set up Go
+        uses: actions/setup-go@v6
+        with:
+          go-version: "1.26.x"
+          cache: true
+
+      # Replace these synthetic fixture paths with artifacts produced or
+      # downloaded by earlier unprivileged steps. Never use production traces.
+      - id: tracedelta
+        name: Compare traces
+        continue-on-error: true
+        uses: ArinF1/TraceDelta@v0.1.0
+        with:
+          baseline: testdata/baseline.json
+          candidate: testdata/candidate.json
+          report-directory: tracedelta-reports
+          duration-threshold: 20%
+          duration-threshold-absolute: 10ms
+          redact-attributes: |
+            organization.internal_id
+
+      - name: Upload completed reports
+        if: ${{ always() && (steps.tracedelta.outputs.exit-code == '0' || steps.tracedelta.outputs.exit-code == '1') }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: tracedelta-reports
+          path: |
+            ${{ steps.tracedelta.outputs.text-report }}
+            ${{ steps.tracedelta.outputs.json-report }}
+            ${{ steps.tracedelta.outputs.html-report }}
+          if-no-files-found: error
+          retention-days: 3
+
+      - name: Enforce comparison result
+        if: ${{ always() }}
+        shell: bash
+        env:
+          TRACEDELTA_EXIT_CODE: ${{ steps.tracedelta.outputs.exit-code }}
+        run: |
+          case "${TRACEDELTA_EXIT_CODE}" in
+            0) printf 'TraceDelta found no behavioral differences.\n' ;;
+            1) printf 'TraceDelta found behavioral differences.\n' >&2; exit 1 ;;
+            *) printf 'TraceDelta could not complete.\n' >&2; exit 2 ;;
+          esac

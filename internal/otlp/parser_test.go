@@ -119,6 +119,72 @@ func TestParseRepresentativeOTLPDocument(t *testing.T) {
 	}
 }
 
+func TestParseOTLPFileJSONLWithNestedValuesEventsAndLinks(t *testing.T) {
+	contents, err := os.ReadFile(filepath.Join("..", "..", "testdata", "otlp-file.jsonl"))
+	if err != nil {
+		t.Fatalf("ReadFile() error = %v", err)
+	}
+
+	snapshot, err := Parse(bytes.NewReader(contents))
+	if err != nil {
+		t.Fatalf("Parse() error = %v", err)
+	}
+	if len(snapshot.Traces) != 2 {
+		t.Fatalf("Parse() trace count = %d, want 2 JSONL trace records", len(snapshot.Traces))
+	}
+
+	var checkout model.Span
+	for _, trace := range snapshot.Traces {
+		for _, span := range trace.Spans {
+			if span.Name == "checkout.handle" {
+				checkout = span
+			}
+		}
+	}
+	if checkout.Name == "" {
+		t.Fatal("checkout.handle span not found")
+	}
+	if checkout.DroppedEventsCount != 3 || checkout.DroppedLinksCount != 4 {
+		t.Fatalf("dropped event/link counts = %d/%d, want 3/4", checkout.DroppedEventsCount, checkout.DroppedLinksCount)
+	}
+
+	nested := checkout.Attributes["synthetic.nested"]
+	if nested.Type != model.AttributeValueArray || len(nested.ArrayValue) != 2 {
+		t.Fatalf("synthetic.nested = %#v, want two-value array", nested)
+	}
+	if nested.ArrayValue[0].Type != model.AttributeValueString || nested.ArrayValue[0].StringValue != "alpha" {
+		t.Fatalf("synthetic.nested[0] = %#v, want string alpha", nested.ArrayValue[0])
+	}
+	list := nested.ArrayValue[1]
+	if list.Type != model.AttributeValueKVList || len(list.KVListValue) != 2 {
+		t.Fatalf("synthetic.nested[1] = %#v, want two-entry kvlist", list)
+	}
+	weights := list.KVListValue[1].Value
+	if weights.Type != model.AttributeValueArray || len(weights.ArrayValue) != 2 || weights.ArrayValue[1].DoubleValue != 0.75 {
+		t.Fatalf("nested weights = %#v, want [0.25, 0.75]", weights)
+	}
+}
+
+func TestParseRejectsEmptyInput(t *testing.T) {
+	_, err := Parse(strings.NewReader(" \n\t"))
+	if err == nil || !strings.Contains(err.Error(), "input is empty") {
+		t.Fatalf("Parse(empty) error = %v, want input is empty", err)
+	}
+}
+
+func TestParseRejectsExcessivelyNestedAnyValue(t *testing.T) {
+	value := `{"stringValue":"leaf"}`
+	for range maxAnyValueDepth {
+		value = `{"arrayValue":{"values":[` + value + `]}}`
+	}
+	input := strings.Replace(validDocument, `{"stringValue": "POST"}`, value, 1)
+
+	_, err := Parse(strings.NewReader(input))
+	if err == nil || !strings.Contains(err.Error(), "nested AnyValue exceeds maximum depth 64") {
+		t.Fatalf("Parse(deep AnyValue) error = %v, want maximum depth error", err)
+	}
+}
+
 func TestParseAcceptsEmptyOTLPEnvelopes(t *testing.T) {
 	for _, input := range []string{
 		`{}`,
@@ -240,11 +306,6 @@ func TestParseRejectsMalformedAndUnsupportedInput(t *testing.T) {
 			wantError: "expected a JSON object",
 		},
 		{
-			name:      "trailing document",
-			input:     validDocument + ` {}`,
-			wantError: "expected exactly one JSON document",
-		},
-		{
 			name:      "missing span name",
 			input:     strings.Replace(validDocument, `"name": "checkout.handle",`, `"name": "",`, 1),
 			wantError: "name must not be empty",
@@ -297,12 +358,12 @@ func TestParseRejectsMalformedAndUnsupportedInput(t *testing.T) {
 		{
 			name:      "multiple primitive value forms",
 			input:     strings.Replace(validDocument, `{"stringValue": "POST"}`, `{"stringValue": "POST", "boolValue": true}`, 1),
-			wantError: `attribute[0] "http.request.method": value must contain exactly one supported OTLP primitive value`,
+			wantError: `attribute[0] "http.request.method": value must contain exactly one OTLP AnyValue case`,
 		},
 		{
 			name:      "no primitive value form",
 			input:     strings.Replace(validDocument, `{"stringValue": "POST"}`, `{}`, 1),
-			wantError: `attribute[0] "http.request.method": value must contain exactly one supported OTLP primitive value`,
+			wantError: `attribute[0] "http.request.method": value must contain exactly one OTLP AnyValue case`,
 		},
 		{
 			name:      "empty attribute key",
@@ -320,29 +381,39 @@ func TestParseRejectsMalformedAndUnsupportedInput(t *testing.T) {
 			wantError: `attribute[1] duplicates key "http.request.method"`,
 		},
 		{
-			name:      "array value",
-			input:     strings.Replace(validDocument, `{"stringValue": "POST"}`, `{"arrayValue": {"values": []}}`, 1),
-			wantError: "arrayValue is not supported",
-		},
-		{
-			name:      "key value list",
-			input:     strings.Replace(validDocument, `{"stringValue": "POST"}`, `{"kvlistValue": {"values": []}}`, 1),
-			wantError: "kvlistValue is not supported",
-		},
-		{
 			name:      "invalid bytes",
 			input:     strings.Replace(validDocument, `{"stringValue": "POST"}`, `{"bytesValue": "%%%"}`, 1),
 			wantError: "bytesValue must be a valid",
 		},
 		{
-			name:      "events",
-			input:     strings.Replace(validDocument, `"status": {`, `"events": [{"name": "synthetic"}], "status": {`, 1),
-			wantError: "events are not supported",
+			name:      "mixed metrics telemetry",
+			input:     `{"resourceSpans": [], "resourceMetrics": []}`,
+			wantError: "field resourceMetrics is not trace telemetry",
 		},
 		{
-			name:      "links",
-			input:     strings.Replace(validDocument, `"status": {`, `"links": [{"traceId": "11111111111111111111111111111111"}], "status": {`, 1),
-			wantError: "links are not supported",
+			name:      "vendor data envelope",
+			input:     `{"data": {"resourceSpans": []}}`,
+			wantError: "field data is an unsupported outer envelope",
+		},
+		{
+			name:      "invalid nested array value",
+			input:     strings.Replace(validDocument, `{"stringValue": "POST"}`, `{"arrayValue": {"values": [{}]}}`, 1),
+			wantError: "arrayValue.values[0]: value must contain exactly one OTLP AnyValue case",
+		},
+		{
+			name:      "invalid event time",
+			input:     strings.Replace(validDocument, `"status": {`, `"events": [{"timeUnixNano": "bad", "name": "synthetic"}], "status": {`, 1),
+			wantError: "events[0]: timeUnixNano must be an unsigned decimal nanosecond value",
+		},
+		{
+			name:      "invalid link ID",
+			input:     strings.Replace(validDocument, `"status": {`, `"links": [{"traceId": "bad"}], "status": {`, 1),
+			wantError: "links[0]: traceId must be 32 hexadecimal characters",
+		},
+		{
+			name:      "duplicate span across JSONL records",
+			input:     validDocument + "\n" + validDocument,
+			wantError: "record[1]: duplicate spanId within its trace",
 		},
 	}
 

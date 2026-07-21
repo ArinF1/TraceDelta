@@ -29,7 +29,7 @@ Changes:
   ADDED    inventory.reserve
   REMOVED  cache.get
   CHANGED  checkout.handle status OK -> ERROR
-  CHANGED  payment.charge duration 120ms -> 245ms
+  CHANGED  payment.charge duration 120ms -> 245ms (thresholds: >=20% and >=10ms)
 
 Result: behavioral differences detected
 ```
@@ -39,20 +39,33 @@ Result: behavioral differences detected
 The current vertical slice supports one documented, strongly typed subset of OTLP JSON while retaining the original synthetic fixtures as compatibility cases. It can:
 
 - read baseline and candidate files into strongly typed models;
-- parse resource spans, instrumentation scopes, spans, numeric OTLP kind/status enums, exact 64-bit timestamp forms, and primitive typed attributes;
-- ignore unknown message fields for forward compatibility while rejecting malformed required span fields and recognized unsupported structures with contextual errors;
+- parse one OTLP/HTTP JSON request or a trace-only OTLP File Exporter JSONL stream, including multiple records, resources, scopes, and traces;
+- preserve recursive typed attributes and validate events and links while keeping unused payloads out of comparison evidence;
+- accept numeric OTLP kind/status enums and exact 64-bit timestamp forms, ignore safe unknown fields, and reject malformed required fields or recognized non-trace envelopes contextually;
 - replace generated IDs, absolute timestamps, and input-array order with a deterministic trace-preserving representation that retains root, internal-parent, and missing-external-parent relationships;
 - floor durations through an explicit typed embedding option (disabled by default) and canonically project selected HTTP/RPC attributes without mutating parsed input;
-- compare spans deterministically by the current stable matching key;
-- report added and removed spans, status changes, and duration increases meeting a percentage threshold;
-- render a deterministic terminal report; and
+- remove built-in credential/personal-data attributes plus caller-denied keys recursively before normalization or evidence construction;
+- pair traces and spans deterministically using normalized root identity, safe semantic attributes, matched-parent context, and distinguishable sibling order while failing explicitly on unresolved ambiguity;
+- report added and removed spans, status changes, safe `error.type` changes between error spans, and duration increases meeting relative and absolute thresholds;
+- render deterministic terminal, schema-versioned JSON, and self-contained offline HTML reports; and
 - return exit code `0` for no meaningful differences, `1` for detected differences, and `2` for usage, file, or parse errors.
 
-The supported schema, compatibility extensions, and current exclusions are documented in [`testdata/README.md`](testdata/README.md). Non-empty events and links, nested array/key-value-list attributes, multiple JSON/JSONL records, and arbitrary exporter variants are not supported yet.
+The supported input profile, compatibility extensions, and current exclusions are documented in [`testdata/README.md`](testdata/README.md); the machine report contract is in [`docs/json-report-schema.md`](docs/json-report-schema.md). This is a bounded trace-only profile, not universal OTLP or arbitrary vendor-exporter compatibility.
 
-## Planned capabilities
+## Finite v0.1 scope
 
-Version 0.1 is planned to add broader OTLP JSON compatibility, semantic trace and span matching, configurable filtering/redaction, service/database/error rules, JSON and standalone HTML reports, richer regression policy, and a GitHub Actions-friendly workflow. See the [roadmap](ROADMAP.md) and [prioritized task backlog](docs/tasks.md) for the honest implementation state.
+Version 0.1 has a fixed release boundary:
+
+- accept either one OTLP/HTTP JSON request object or a trace-only OTLP File Exporter JSONL stream;
+- compare traces and spans deterministically;
+- detect added spans, removed spans, error-state changes, and latency regressions that meet configurable relative and absolute thresholds;
+- redact common secret/personal-data attributes plus caller-supplied denylisted keys before evidence is built;
+- render equivalent terminal, versioned JSON, and standalone HTML reports;
+- ship a reusable least-privilege GitHub Action, a synthetic example application, and a deliberately regressed public pull request;
+- gate the release with useful unit, integration, race, and fuzz tests; and
+- publish versioned cross-platform binaries with checksums and a reproducible 45–60 second demonstration.
+
+Database-shape analysis, general service/relationship rules, exhaustive OTLP compatibility, hosted services, telemetry collection, and source attribution do not block v0.1. The rationale is in [ADR 0002](docs/decisions/0002-v0.1-release-boundary.md); the [roadmap](ROADMAP.md) and [prioritized task backlog](docs/tasks.md) show the finite delivery sequence and honest implementation state.
 
 ## Quick start
 
@@ -75,6 +88,10 @@ go build -o ./bin/tracedelta ./cmd/tracedelta
 The comparison command, flags, output contract, and exit codes are specified in [`docs/cli-spec.md`](docs/cli-spec.md).
 
 ## Development
+
+For provider-neutral CI, use [`scripts/ci-compare.sh`](scripts/ci-compare.sh) to create JSON and HTML artifacts while preserving the distinction between regression exit `1` and tool/input exit `2`. The [copyable generic CI example](examples/ci/README.md) includes safe artifact-upload and troubleshooting guidance.
+
+The reusable composite [GitHub Action](docs/github-action.md) builds the source selected by its pinned Action ref and exposes finite threshold/redaction inputs plus structured outcome/report outputs. Its [least-privilege pull-request example](examples/github-action/compare.yml) preserves reports before enforcing regressions and uses no secret or write permission.
 
 Common commands are exposed through the Makefile:
 
