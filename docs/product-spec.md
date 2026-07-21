@@ -66,7 +66,7 @@ Version 0.1 is complete only when all of the following are demonstrated:
 11. Tagged releases publish versioned binaries for Linux amd64/arm64, macOS amd64/arm64, and Windows amd64 with SHA-256 checksums.
 12. The README links a reproducible 45–60 second demonstration from trace inputs through the failing comparison and reports.
 
-The current repository slice implements the bounded v0.1 OTLP/HTTP JSON and trace-only File Exporter JSONL profile, early built-in/caller-configured attribute redaction, deterministic trace-preserving normalization and semantic trace/span matching, the complete finding set, equivalent terminal/schema-versioned JSON/standalone HTML reports, and a reusable least-privilege composite GitHub Action. The deliberately regressed example, release artifacts, and demonstration remain open in [`tasks.md`](tasks.md).
+The current repository slice implements the bounded v0.1 OTLP/HTTP JSON and trace-only File Exporter JSONL profile, early built-in/caller-configured attribute redaction, deterministic trace-preserving normalization and semantic trace/span matching, the complete finding set, equivalent terminal/schema-versioned JSON/standalone HTML reports, a reusable least-privilege composite GitHub Action, and a public deliberately regressed synthetic example PR. Release artifacts and the demonstration remain open in [`tasks.md`](tasks.md).
 
 The exact boundary and its rationale are recorded in [ADR 0002](decisions/0002-v0.1-release-boundary.md).
 

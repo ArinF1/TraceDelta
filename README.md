@@ -93,6 +93,8 @@ For provider-neutral CI, use [`scripts/ci-compare.sh`](scripts/ci-compare.sh) to
 
 The reusable composite [GitHub Action](docs/github-action.md) builds the source selected by its pinned Action ref and exposes finite threshold/redaction inputs plus structured outcome/report outputs. Its [least-privilege pull-request example](examples/github-action/compare.yml) preserves reports before enforcing regressions and uses no secret or write permission.
 
+The deterministic [example application](examples/regression-app/README.md) is exercised by public draft [PR #7](https://github.com/ArinF1/TraceDelta/pull/7): normal repository checks pass, the behavior comparison fails intentionally with the four documented findings, and all three reports are retained as one short-lived workflow artifact.
+
 Common commands are exposed through the Makefile:
 
 ```bash

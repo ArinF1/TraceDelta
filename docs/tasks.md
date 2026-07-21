@@ -4,23 +4,16 @@ This is the execution backlog and status record. Work on one task at a time, nor
 
 ## Now
 
-### TD-031 — Add the deliberately regressed example pull request
-
-- **Description:** Add a small synthetic example application and a public pull request whose intentional regression exercises added/removed spans, an error change, and a latency regression through the reusable Action.
-- **Acceptance criteria:** The application emits deterministic synthetic OTLP JSON without external services or secrets; baseline and candidate collection is reproducible; the linked pull request fails for the documented reasons and preserves all three report formats; maintainers can reset/replay the demonstration without rewriting history.
-- **Relevant files:** `examples/`, `.github/workflows/`, `README.md`
-- **Dependencies:** TD-015
-
-## Next
-
-The following sequence is the complete remaining v0.1 gate after the current task. Execute one task at a time in this order unless a dependency or verified finding requires an explicit reprioritization.
-
 ### TD-032 — Complete the v0.1 verification matrix
 
 - **Description:** Add the integration, race, and focused fuzz coverage needed to make the completed release workflow trustworthy without duplicating unit-test coverage.
 - **Acceptance criteria:** End-to-end CLI and Action smoke tests cover pass/regression/tool-error outcomes and report consistency; `go test -race ./...` passes; bounded fuzz smoke runs cover parser input, matcher determinism, and reporter escaping; the release checklist names exact commands and expected outcomes.
 - **Relevant files:** Go tests, `.github/workflows/`, `scripts/`, `docs/development.md`, `docs/release-process.md`
 - **Dependencies:** TD-013, TD-015, TD-031
+
+## Next
+
+The following sequence is the complete remaining v0.1 gate after the current task. Execute one task at a time in this order unless a dependency or verified finding requires an explicit reprioritization.
 
 ### TD-033 — Publish versioned v0.1 binaries
 
@@ -69,6 +62,14 @@ These tasks remain useful but do not block the first release.
 - **Dependencies:** v0.1, separate prioritization
 
 ## Completed
+
+### TD-031 — Add the deliberately regressed example pull request
+
+- **Description:** Add a small synthetic example application and a public pull request whose intentional regression exercises added/removed spans, an error change, and a latency regression through the reusable Action.
+- **Acceptance criteria:** The application emits deterministic synthetic OTLP JSON without external services or secrets; baseline and candidate collection is reproducible; the linked pull request fails for the documented reasons and preserves all three report formats; maintainers can reset/replay the demonstration without rewriting history.
+- **Outcome:** Added a deterministic standard-library Go example that emits synthetic OTLP/HTTP JSON with no network or secret. The fork-safe workflow regenerates baseline and candidate artifacts from their exact commits, executes the trusted base Action, uploads all three reports, and then enforces the result. Public draft [PR #7](https://github.com/ArinF1/TraceDelta/pull/7) changes only the scenario and its contract test; normal Linux/Windows CI passes, the example comparison fails with the promised four findings, and the retained artifact contains non-empty text, JSON, and HTML reports. The branch can be replayed from commit `3021105` without rewriting history.
+- **Relevant files:** `examples/regression-app/`, `.github/workflows/example-regression.yml`, `action.yml`, `README.md`
+- **Dependencies:** TD-015
 
 ### TD-015 — Provide GitHub Actions integration
 
