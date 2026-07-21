@@ -5,7 +5,7 @@ BINARY := $(BINARY_DIR)/tracedelta
 GO ?= go
 GOFMT ?= gofmt
 
-.PHONY: help build test test-race test-fuzz-smoke fmt fmt-check vet check run-example clean
+.PHONY: help build test test-race test-fuzz-smoke test-release-smoke fmt fmt-check vet check run-example clean
 
 help: ## Show available targets.
 	@awk 'BEGIN {FS = ":.*## "; printf "TraceDelta development targets:\n\n"} /^[a-zA-Z0-9_-]+:.*## / {printf "  %-14s %s\n", $$1, $$2}' $(MAKEFILE_LIST)
@@ -22,6 +22,9 @@ test-race: ## Run tests with the race detector.
 
 test-fuzz-smoke: ## Run bounded parser, matcher, and reporter fuzz targets.
 	bash ./scripts/fuzz-smoke.sh
+
+test-release-smoke: ## Cross-build and verify the five-target release bundle.
+	bash ./scripts/build-release.smoke.sh
 
 fmt: ## Format all Go source files.
 	find . -type f -name '*.go' ! -path './vendor/*' -exec $(GOFMT) -w {} +

@@ -58,6 +58,10 @@ jobs:
         shell: bash
         run: bash ./scripts/run-action.smoke.sh ./tracedelta
 
+      - name: Smoke-test five-target release bundle
+        shell: bash
+        run: bash ./scripts/build-release.smoke.sh
+
       - id: local-action-pass
         name: Exercise passing local composite Action
         uses: ./

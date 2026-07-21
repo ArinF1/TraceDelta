@@ -87,6 +87,16 @@ go build -o ./bin/tracedelta ./cmd/tracedelta
 
 The comparison command, flags, output contract, and exit codes are specified in [`docs/cli-spec.md`](docs/cli-spec.md).
 
+## Versioned binaries
+
+Tagged v0.1 releases provide Linux amd64/arm64, macOS amd64/arm64, and Windows amd64 binaries plus one SHA-256 checksum file. After a release is published, download the binary for your platform and `tracedelta_<version>_checksums.txt` from the [GitHub Releases page](https://github.com/ArinF1/TraceDelta/releases), then verify it before execution:
+
+```bash
+sha256sum --check tracedelta_0.1.0_checksums.txt --ignore-missing
+```
+
+No stable release has been published yet. Exact names, dry-run instructions, permissions, and the conservative release procedure are documented in [`docs/release-process.md`](docs/release-process.md).
+
 ## Development
 
 For provider-neutral CI, use [`scripts/ci-compare.sh`](scripts/ci-compare.sh) to create JSON and HTML artifacts while preserving the distinction between regression exit `1` and tool/input exit `2`. The [copyable generic CI example](examples/ci/README.md) includes safe artifact-upload and troubleshooting guidance.

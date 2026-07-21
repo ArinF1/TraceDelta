@@ -29,6 +29,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 - A provider-neutral CI wrapper and reusable source-pinned composite GitHub Action with finite threshold/redaction inputs, structured `0`/`1`/`2` outputs, safe JSON/HTML artifact handling, fork-safe least-privilege workflow guidance, and real-binary smoke coverage.
 - A deterministic synthetic OTLP example application and public deliberately regressed PR whose trusted-base Action workflow demonstrates added, removed, error, and latency findings while retaining terminal, JSON, and HTML reports.
 - Focused parser-input, matcher-order, and reporter-escaping fuzz targets; bounded fuzz automation; and end-to-end CLI/composite-Action pass, regression, tool-error, and report-consistency gates.
+- A least-privilege tag release workflow and fail-closed local builder for versioned Linux amd64/arm64, macOS amd64/arm64, and Windows amd64 binaries with verified SHA-256 checksums and a non-publishing dry-run path.
 
 ### Changed
 

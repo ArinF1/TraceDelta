@@ -4,23 +4,16 @@ This is the execution backlog and status record. Work on one task at a time, nor
 
 ## Now
 
-### TD-032 — Complete the v0.1 verification matrix
-
-- **Description:** Add the integration, race, and focused fuzz coverage needed to make the completed release workflow trustworthy without duplicating unit-test coverage.
-- **Acceptance criteria:** End-to-end CLI and Action smoke tests cover pass/regression/tool-error outcomes and report consistency; `go test -race ./...` passes; bounded fuzz smoke runs cover parser input, matcher determinism, and reporter escaping; the release checklist names exact commands and expected outcomes.
-- **Relevant files:** Go tests, `.github/workflows/`, `scripts/`, `docs/development.md`, `docs/release-process.md`
-- **Dependencies:** TD-013, TD-015, TD-031
-
-## Next
-
-The following sequence is the complete remaining v0.1 gate after the current task. Execute one task at a time in this order unless a dependency or verified finding requires an explicit reprioritization.
-
 ### TD-033 — Publish versioned v0.1 binaries
 
 - **Description:** Add tag-driven release automation for Linux amd64/arm64, macOS amd64/arm64, and Windows amd64 binaries plus SHA-256 checksums.
 - **Acceptance criteria:** Artifact naming is documented; a dry run builds all five targets; tags matching `v*` create a GitHub Release with binaries and checksums; the workflow uses least privilege and pinned official actions; no signing, package manager, SBOM, or container promise is implied for v0.1.
 - **Relevant files:** `.github/workflows/`, `docs/release-process.md`, `README.md`, `CHANGELOG.md`
 - **Dependencies:** TD-032
+
+## Next
+
+The following sequence is the complete remaining v0.1 gate after the current task. Execute one task at a time in this order unless a dependency or verified finding requires an explicit reprioritization.
 
 ### TD-034 — Publish the 45–60 second demonstration
 
@@ -62,6 +55,14 @@ These tasks remain useful but do not block the first release.
 - **Dependencies:** v0.1, separate prioritization
 
 ## Completed
+
+### TD-032 — Complete the v0.1 verification matrix
+
+- **Description:** Add the integration, race, and focused fuzz coverage needed to make the completed release workflow trustworthy without duplicating unit-test coverage.
+- **Acceptance criteria:** End-to-end CLI and Action smoke tests cover pass/regression/tool-error outcomes and report consistency; `go test -race ./...` passes; bounded fuzz smoke runs cover parser input, matcher determinism, and reporter escaping; the release checklist names exact commands and expected outcomes.
+- **Outcome:** Added focused arbitrary-byte parser, trace-order matcher determinism, and cross-format reporter escaping fuzz targets plus a bounded two-second-per-target smoke script and Make target. Expanded the Action entry smoke and actual local composite-Action CI to cover pass `0`, regression `1`, tool/input `2`, all three non-empty reports, structured outputs, and report-policy consistency. The release checklist now names exact commands and required outcomes.
+- **Relevant files:** `internal/otlp/parser_fuzz_test.go`, `internal/match/match_fuzz_test.go`, `internal/report/report_fuzz_test.go`, `scripts/fuzz-smoke.sh`, `scripts/run-action.smoke.sh`, `.github/workflows/ci.yml`, `Makefile`, `docs/development.md`, `docs/release-process.md`
+- **Dependencies:** TD-013, TD-015, TD-031
 
 ### TD-031 — Add the deliberately regressed example pull request
 

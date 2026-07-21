@@ -1,6 +1,23 @@
 # Release process
 
-TraceDelta has no published release and no automated publishing workflow. Versioned binaries and checksum-producing tag automation are required for v0.1 under TD-033; until that task is complete, this document describes the conservative release controls the workflow must preserve.
+TraceDelta has no published release yet. The release workflow performs a read-only five-target dry run when manually dispatched and publishes only for pushed `v*` tags. Its build job has `contents: read`; only the tag-gated publish job receives `contents: write`.
+
+## Release artifacts
+
+For `v0.1.0`, the workflow produces exactly:
+
+```text
+tracedelta_0.1.0_linux_amd64
+tracedelta_0.1.0_linux_arm64
+tracedelta_0.1.0_darwin_amd64
+tracedelta_0.1.0_darwin_arm64
+tracedelta_0.1.0_windows_amd64.exe
+tracedelta_0.1.0_checksums.txt
+```
+
+All binaries are `CGO_ENABLED=0`, trimmed-path Go builds from the tagged source. The checksum file uses SHA-256 and relative artifact names. The workflow verifies checksums before upload and again after the tag job downloads the build artifact. v0.1 does not promise signing, package-manager publication, an SBOM, or a container image.
+
+Run the exact five-target build locally with `make test-release-smoke`, or manually dispatch `.github/workflows/release.yml` with a non-release label such as `v0.1.0-test`. A manual dispatch uploads a short-lived workflow artifact and never enters the publish job.
 
 ## Versioning
 
@@ -69,7 +86,7 @@ Record exact commands, toolchain version, and outcomes in `docs/current-state.md
 8. Download every published target artifact and verify it against the published SHA-256 checksums.
 9. Restore an empty **Unreleased** section and update the development version on the next change.
 
-Do not publish binaries from an unreviewed developer workstation workflow and do not add credentials to the repository to automate these steps. v0.1 does not promise artifact signing, package-manager distribution, an SBOM, or container images.
+Do not publish binaries from an unreviewed developer workstation workflow and do not add credentials to the repository to automate these steps. The tag workflow uses only GitHub's scoped job token and immutable commit pins for official actions.
 
 ## Rollback and corrections
 
