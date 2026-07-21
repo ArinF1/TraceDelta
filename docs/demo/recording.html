@@ -1,0 +1,308 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>TraceDelta v0.1 demonstration</title>
+  <style>
+    :root { color-scheme: dark; }
+    html, body { height: 100%; }
+    body {
+      margin: 0;
+      display: grid;
+      place-items: center;
+      overflow: hidden;
+      background: #07111f;
+      font-family: Inter, "Segoe UI", sans-serif;
+    }
+    canvas {
+      width: min(100vw, 177.78vh);
+      height: min(56.25vw, 100vh);
+      box-shadow: 0 28px 80px #0009;
+    }
+    video { width: min(100vw, 1280px); }
+  </style>
+</head>
+<body>
+  <canvas id="demo" width="1280" height="720" aria-label="TraceDelta v0.1 demonstration"></canvas>
+  <script src="vendor/fix-webm-duration.js"></script>
+  <script>
+    "use strict";
+
+    const durationSeconds = 52;
+    const canvas = document.getElementById("demo");
+    const context = canvas.getContext("2d");
+    const params = new URLSearchParams(location.search);
+    const colors = {
+      background: "#07111f",
+      panel: "#101f32",
+      panelAlt: "#162b43",
+      border: "#29445f",
+      text: "#f4f8fc",
+      muted: "#9cb2c8",
+      cyan: "#53d3e8",
+      green: "#69db9b",
+      yellow: "#ffd166",
+      red: "#ff6b7a",
+      purple: "#b8a1ff"
+    };
+
+    function roundedRect(x, y, width, height, radius, fill, stroke = null) {
+      const r = Math.min(radius, width / 2, height / 2);
+      context.beginPath();
+      context.roundRect(x, y, width, height, r);
+      context.fillStyle = fill;
+      context.fill();
+      if (stroke) {
+        context.strokeStyle = stroke;
+        context.lineWidth = 2;
+        context.stroke();
+      }
+    }
+
+    function write(text, x, y, size = 28, color = colors.text, weight = 500, family = "Inter, Segoe UI, sans-serif") {
+      context.fillStyle = color;
+      context.font = `${weight} ${size}px ${family}`;
+      context.textBaseline = "top";
+      context.fillText(text, x, y);
+    }
+
+    function mono(text, x, y, size = 22, color = colors.text, weight = 500) {
+      write(text, x, y, size, color, weight, "Cascadia Mono, Consolas, monospace");
+    }
+
+    function header(kicker, title, subtitle) {
+      write(kicker.toUpperCase(), 64, 43, 18, colors.cyan, 700);
+      write(title, 64, 77, 39, colors.text, 720);
+      write(subtitle, 64, 130, 22, colors.muted, 450);
+    }
+
+    function badge(text, x, y, color) {
+      context.font = "700 17px Inter, Segoe UI, sans-serif";
+      const width = context.measureText(text).width + 30;
+      roundedRect(x, y, width, 34, 17, `${color}22`, color);
+      write(text, x + 15, y + 7, 17, color, 700);
+      return width;
+    }
+
+    function footer(time) {
+      const clamped = Math.min(durationSeconds, Math.max(0, time));
+      roundedRect(64, 676, 1152, 5, 3, colors.border);
+      roundedRect(64, 676, 1152 * (clamped / durationSeconds), 5, 3, colors.cyan);
+      mono(`00:${String(Math.floor(clamped)).padStart(2, "0")} / 00:52`, 1060, 645, 16, colors.muted, 500);
+      write("TraceDelta v0.1", 64, 644, 17, colors.muted, 650);
+    }
+
+    function base() {
+      context.fillStyle = colors.background;
+      context.fillRect(0, 0, canvas.width, canvas.height);
+      const gradient = context.createRadialGradient(1130, 60, 0, 1130, 60, 540);
+      gradient.addColorStop(0, "#153f5f88");
+      gradient.addColorStop(1, "#07111f00");
+      context.fillStyle = gradient;
+      context.fillRect(0, 0, canvas.width, canvas.height);
+    }
+
+    function titleScene(time) {
+      write("Trace", 78, 173, 78, colors.text, 760);
+      write("Delta", 272, 173, 78, colors.cyan, 760);
+      write("Runtime behavior diffs for pull requests", 82, 274, 30, colors.muted, 500);
+      badge("v0.1.0", 82, 335, colors.green);
+      badge("52-second reproducible demo", 194, 335, colors.purple);
+      roundedRect(82, 418, 1116, 118, 20, colors.panel, colors.border);
+      write("OTLP JSON", 116, 445, 23, colors.text, 700);
+      write("→", 278, 443, 29, colors.cyan, 700);
+      write("deterministic comparison", 332, 445, 23, colors.text, 700);
+      write("→", 634, 443, 29, colors.cyan, 700);
+      write("terminal · JSON · HTML", 686, 445, 23, colors.text, 700);
+      write("Local processing • redacted evidence • CI-ready exit codes", 116, 488, 20, colors.muted, 500);
+    }
+
+    function inputColumn(x, title, accent, spans) {
+      roundedRect(x, 197, 532, 382, 20, colors.panel, colors.border);
+      write(title, x + 28, 223, 24, accent, 730);
+      write("synthetic OTLP/HTTP JSON", x + 28, 258, 18, colors.muted, 500);
+      spans.forEach((span, index) => {
+        const y = 307 + index * 76;
+        roundedRect(x + 28, y, 476, 57, 12, colors.panelAlt);
+        mono(span.name, x + 45, y + 17, 19, colors.text, 650);
+        const labelWidth = context.measureText(span.detail).width;
+        mono(span.detail, x + 486 - labelWidth, y + 17, 17, span.color, 650);
+      });
+    }
+
+    function inputsScene() {
+      header("1 · Inputs", "Compare two realistic trace exports", "Fixed IDs and timestamps make the public example replayable.");
+      inputColumn(64, "BASELINE", colors.green, [
+        { name: "checkout.handle", detail: "OK · 100ms", color: colors.green },
+        { name: "payment.charge", detail: "40ms", color: colors.green },
+        { name: "cache.get", detail: "10ms", color: colors.green }
+      ]);
+      inputColumn(684, "CANDIDATE", colors.yellow, [
+        { name: "checkout.handle", detail: "ERROR · 100ms", color: colors.red },
+        { name: "payment.charge", detail: "70ms", color: colors.red },
+        { name: "inventory.reserve", detail: "12ms", color: colors.yellow }
+      ]);
+    }
+
+    function terminalScene() {
+      header("2 · Terminal", "One command, deterministic findings", "Exit 1 means a completed comparison found behavioral differences.");
+      roundedRect(64, 192, 1152, 416, 18, "#08101a", colors.border);
+      roundedRect(64, 192, 1152, 43, 18, "#1a2c3f");
+      context.fillStyle = colors.red; context.beginPath(); context.arc(91, 214, 7, 0, Math.PI * 2); context.fill();
+      context.fillStyle = colors.yellow; context.beginPath(); context.arc(116, 214, 7, 0, Math.PI * 2); context.fill();
+      context.fillStyle = colors.green; context.beginPath(); context.arc(141, 214, 7, 0, Math.PI * 2); context.fill();
+      mono("tracedelta compare --baseline baseline.json --candidate candidate.json", 178, 202, 17, colors.muted, 500);
+      const lines = [
+        ["Summary:  1 added · 1 removed · 2 changed", colors.text],
+        ["ADDED    inventory.reserve", colors.green],
+        ["REMOVED  cache.get", colors.yellow],
+        ["CHANGED  checkout.handle status OK -> ERROR", colors.red],
+        ["CHANGED  payment.charge duration 40ms -> 70ms", colors.red],
+        ["          thresholds: >=20% and >=10ms", colors.muted],
+        ["Result: behavioral differences detected · exit 1", colors.yellow]
+      ];
+      lines.forEach((line, index) => mono(line[0], 96, 266 + index * 43, index === 0 ? 21 : 20, line[1], index === 0 ? 700 : 550));
+    }
+
+    function reportCard(x, title, extension, color, lines) {
+      roundedRect(x, 200, 345, 370, 18, colors.panel, colors.border);
+      badge(extension, x + 24, 224, color);
+      write(title, x + 24, 276, 25, colors.text, 720);
+      lines.forEach((line, index) => mono(line, x + 24, 326 + index * 35, 16, index === 0 ? color : colors.muted, index === 0 ? 700 : 500));
+    }
+
+    function reportsScene() {
+      header("3 · Reports", "Three equivalent views are preserved", "Machine-readable policy and human review stay in sync.");
+      reportCard(64, "Terminal", ".txt", colors.cyan, ["4 findings", "ordered output", "shell-friendly"]);
+      reportCard(468, "Structured", ".json", colors.purple, ["tracedelta.report/v1", '"exitCode": 1', '"findings": 4']);
+      reportCard(872, "Standalone", ".html", colors.green, ["offline document", "inline CSS", "no scripts/assets"]);
+    }
+
+    function htmlScene() {
+      header("4 · HTML", "A standalone review artifact", "Responsive, escaped, and readable without a server or network.");
+      roundedRect(64, 188, 1152, 426, 18, "#f5f8fb", "#c8d4df");
+      write("TraceDelta comparison", 96, 219, 31, "#17324a", 760);
+      write("artifacts/baseline.json  →  artifacts/candidate.json", 96, 264, 18, "#62758a", 500);
+      const metrics = [
+        ["1", "Added", colors.green], ["1", "Removed", colors.yellow], ["2", "Changed", colors.red], ["4", "Findings", colors.purple]
+      ];
+      metrics.forEach((metric, index) => {
+        const x = 96 + index * 260;
+        roundedRect(x, 308, 228, 86, 12, "#ffffff", "#d7e1ea");
+        write(metric[0], x + 18, 321, 31, metric[2], 780);
+        write(metric[1], x + 18, 359, 16, "#62758a", 650);
+      });
+      const rows = [
+        ["ADDED", "inventory.reserve", colors.green],
+        ["REMOVED", "cache.get", colors.yellow],
+        ["CHANGED", "checkout.handle · OK → ERROR", colors.red],
+        ["CHANGED", "payment.charge · 40ms → 70ms", colors.red]
+      ];
+      rows.forEach((row, index) => {
+        const y = 423 + index * 42;
+        write(row[0], 98, y, 15, row[2], 760);
+        write(row[1], 225, y - 1, 18, "#17324a", 620);
+      });
+    }
+
+    function actionScene() {
+      header("5 · GitHub Action", "The deliberately regressed PR fails usefully", "Normal tests stay green; the comparison retains every report before gating.");
+      roundedRect(64, 190, 1152, 420, 18, colors.panel, colors.border);
+      write("Pull request #7", 96, 220, 24, colors.text, 730);
+      badge("DRAFT", 1015, 214, colors.muted);
+      const checks = [
+        ["✓", "Test, vet, format, and build", "pass · 42s", colors.green],
+        ["✓", "Windows validation watchdog", "pass · 1m 2s", colors.green],
+        ["×", "compare-example", "fail · 23s", colors.red]
+      ];
+      checks.forEach((check, index) => {
+        const y = 278 + index * 70;
+        roundedRect(96, y, 1088, 54, 12, colors.panelAlt);
+        write(check[0], 116, y + 11, 24, check[3], 800);
+        write(check[1], 158, y + 14, 20, colors.text, 650);
+        write(check[2], 1015, y + 15, 18, check[3], 650);
+      });
+      roundedRect(96, 512, 1088, 66, 12, "#0c1826", colors.border);
+      write("Artifact", 118, 527, 17, colors.cyan, 750);
+      mono("example-tracedelta-reports  ·  .txt  .json  .html", 220, 527, 18, colors.text, 550);
+    }
+
+    function closingScene() {
+      write("TraceDelta v0.1.0", 64, 154, 51, colors.text, 760);
+      write("Behavior changes made reviewable.", 64, 222, 32, colors.cyan, 650);
+      roundedRect(64, 311, 1152, 154, 20, colors.panel, colors.border);
+      badge("5 binaries", 98, 342, colors.green);
+      badge("SHA-256 checksums", 255, 342, colors.purple);
+      badge("reusable Action", 492, 342, colors.cyan);
+      badge("redacted reports", 701, 342, colors.yellow);
+      write("github.com/ArinF1/TraceDelta/releases/tag/v0.1.0", 98, 407, 22, colors.text, 600);
+      write("Exact commands and transcript: docs/demo.md", 64, 512, 22, colors.muted, 550);
+    }
+
+    function drawScene(time) {
+      base();
+      if (time < 6) titleScene(time);
+      else if (time < 14) inputsScene();
+      else if (time < 25) terminalScene();
+      else if (time < 33) reportsScene();
+      else if (time < 41) htmlScene();
+      else if (time < 49) actionScene();
+      else closingScene();
+      footer(time);
+    }
+
+    async function verifyVideo(source) {
+      canvas.remove();
+      const video = document.createElement("video");
+      video.preload = "metadata";
+      video.src = source;
+      video.addEventListener("loadedmetadata", () => {
+        document.body.innerHTML = `<main id="duration" data-seconds="${video.duration}">${video.duration}</main>`;
+        document.title = "TraceDelta demo verified";
+      });
+      video.addEventListener("error", () => {
+        document.body.innerHTML = '<main id="duration-error">metadata error</main>';
+      });
+      document.body.appendChild(video);
+    }
+
+    async function record() {
+      const stream = canvas.captureStream(30);
+      const mimeType = ["video/webm;codecs=vp9", "video/webm;codecs=vp8", "video/webm"]
+        .find(type => MediaRecorder.isTypeSupported(type));
+      if (!mimeType) throw new Error("No supported WebM MediaRecorder codec");
+      const chunks = [];
+      const recorder = new MediaRecorder(stream, { mimeType, videoBitsPerSecond: 2400000 });
+      recorder.addEventListener("dataavailable", event => { if (event.data.size) chunks.push(event.data); });
+      recorder.addEventListener("stop", async () => {
+        const streamedBlob = new Blob(chunks, { type: mimeType });
+        const blob = await window.ysFixWebmDuration(streamedBlob, durationSeconds * 1000, { logger: false });
+        const link = document.createElement("a");
+        link.download = "tracedelta-v0.1-demo.webm";
+        link.href = URL.createObjectURL(blob);
+        link.click();
+        document.title = "TraceDelta demo complete";
+      });
+      const started = performance.now();
+      recorder.start(1000);
+      function frame(now) {
+        const elapsed = (now - started) / 1000;
+        drawScene(elapsed);
+        if (elapsed < durationSeconds) requestAnimationFrame(frame);
+        else recorder.stop();
+      }
+      requestAnimationFrame(frame);
+    }
+
+    if (params.has("verify")) {
+      verifyVideo(params.get("verify"));
+    } else if (params.has("preview")) {
+      drawScene(Number(params.get("preview")) || 0);
+    } else {
+      drawScene(0);
+      record();
+    }
+  </script>
+</body>
+</html>

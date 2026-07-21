@@ -1,10 +1,10 @@
 # Current state
 
-Last updated: 2026-07-20
+Last updated: 2026-07-21
 
 ## Current version
 
-`v0.1.0-dev` — initial development foundation. No release has been published and no compatibility guarantee is implied yet.
+`v0.1.0` — published experimental release. The documented v0.1 input, comparison, CLI, report, Action, and artifact contracts define its supported boundary; no v1-stable compatibility guarantee is implied.
 
 The repository uses Go 1.26, the newest stable Go version available when the project was initialized. Its canonical module path is `github.com/ArinF1/TraceDelta`.
 
@@ -27,6 +27,8 @@ The repository uses Go 1.26, the newest stable Go version available when the pro
 - A reusable composite GitHub Action builds TraceDelta from its pinned Action source, accepts caller-supplied artifacts plus finite latency/redaction inputs, exposes structured outcome/report outputs, and preserves reports for completed exit `0`/`1` comparisons while failing tool/input exit `2` without partial artifacts.
 - A deterministic synthetic example application emits OTLP/HTTP JSON without services or secrets. Its pull-request workflow regenerates exact base/candidate artifacts, uses the trusted base Action, and public draft PR #7 demonstrates the four v0.1 finding categories while retaining text, JSON, and HTML reports.
 - Focused fuzz targets cover arbitrary parser input, trace-order-independent matcher output, and terminal/JSON/HTML reporter escaping. CI runs bounded fuzz smoke plus actual composite-Action pass, regression, and tool-error paths with cross-format outcome checks.
+- The published v0.1.0 GitHub Release contains five `CGO_ENABLED=0` Linux/macOS/Windows binaries and a SHA-256 manifest. The tag workflow builds once in a read-only job, verifies the bundle before and after transfer, and grants write permission only to its tag-gated publish job.
+- A published 52-second 1280×720 WebM demonstrates the synthetic inputs, exact terminal findings, JSON/HTML artifacts, and deliberately failing PR #7 Action. A timestamped transcript, public-branch replay commands, and deterministic local recording source accompany it.
 - A provider-neutral CI wrapper creates JSON and HTML artifacts in a fresh directory without logging report contents, preserves completed comparison exits `0`/`1`, maps missing/invalid/tool/report failures to `2`, and removes partial output; its real-binary smoke runs in Linux CI.
 - Synthetic fixtures demonstrate one unchanged span, one added span, one removed span, one status change, one meaningful duration increase, and equivalent reordered runs under an explicit duration bucket.
 - Unit tests exercise parsing, normalization invariants and boundaries, supported diff behavior, ordering, and CLI exit mapping.
@@ -41,8 +43,8 @@ The repository uses Go 1.26, the newest stable Go version available when the pro
 - Changed service-call, error-attribute, database-shape, or relationship rules.
 - Configuration files, CLI duration-bucket syntax, custom evidence allowlists, or per-rule regression policy beyond the two latency thresholds.
 - GitHub pull-request comment/check APIs beyond normal Action outputs and artifacts.
-- Remote storage, a database, a web application, telemetry collection, or release publishing.
-- Versioned release binaries or the 45–60 second demonstration.
+- Remote trace storage, a database, a web application, or telemetry collection.
+- Artifact signing, package-manager publication, an SBOM, or a container image.
 
 ## Known limitations
 
@@ -56,7 +58,7 @@ The repository uses Go 1.26, the newest stable Go version available when the pro
 - All three formats write to standard output by default or to a new `--output` file; existing files require `--force`, and input files are never valid output targets.
 - Key-based redaction is not anonymization: custom sensitive values under unknown keys and sensitive non-attribute fields remain possible, and source trace files are unchanged on disk.
 - Resource-exhaustion bounds for very large or adversarial inputs are not yet characterized.
-- TD-033 release automation is implemented and its five-target local and Linux CI dry runs pass, but it is not publication-complete. A manual dispatch from the unmerged foundation branch returned `HTTP 404: workflow release.yml not found on the default branch`; merging PR #6 and pushing `v0.1.0` require explicit user approval, so no tag or GitHub Release exists yet.
+- v0.1.0 is experimental. Its published binaries are checksum-verified but unsigned, and there is no package-manager, SBOM, or container-image distribution.
 
 ## Important architecture facts
 
@@ -67,14 +69,24 @@ The repository uses Go 1.26, the newest stable Go version available when the pro
 - Generated trace/span IDs are removed only after in-trace parent relationships are converted to canonical local references; they never serve as cross-run behavioral identity.
 - Absolute start clocks and parser input order are absent from normalized values; dense relative order, structural subtree digests, and sorted typed stable attributes provide deterministic ordering.
 - Comparison findings are domain results, not Go errors; the CLI maps them to policy exit codes.
-- All reporters will consume one ordered comparison-result model.
+- All reporters consume one ordered comparison-result model.
 - No database, web app, frontend framework, or external service is part of v0.1.
 - ADR 0001 records the architectural rationale.
 - ADR 0002 fixes a finite v0.1 boundary: realistic OTLP JSON, deterministic matching, added/removed/error/latency findings, early redaction, three report formats, a reusable Action and regressed example, useful unit/integration/race/fuzz coverage, versioned binaries, and a 45–60 second demonstration.
 
 ## Latest validation record
 
-Validated on 2026-07-21 after TD-032. The bounded fuzz smoke passed 28,643 parser executions, 4,401 matcher executions, and 2,625 reporter executions in the recorded local run. The Action entry smoke passed pass/regression/tool-error outcomes and text/JSON/HTML consistency. The repository-native Windows entry point passed formatting, all ten packages, vet, and CLI build; `go test -race -count=1 ./...` passed all ten packages. Foundation PR #6 then passed Linux CI—including bounded fuzz plus real composite-Action `0`/`1`/`2` checks—and the Windows watchdog job.
+Validated on 2026-07-21 through TD-034. The repository-native Windows entry point passed formatting, all ten packages, vet, and CLI build after the final foundation workflow correction. PR #6 passed both Linux and Windows required checks and was squash-merged at `53b02a9`. Read-only release run `29867684415` built and verified all five targets while skipping publication. Tag run `29867939602` then built the same targets, verified checksums before and after artifact transfer, and published v0.1.0. An independent public download contained the exact five binaries plus checksum manifest; all five hashes matched and the Windows binary passed representative-fixture self-comparison with exit `0`.
+
+The demonstration renderer completed its real-time acceptance run in 58.7 seconds and read finite WebM metadata of exactly 52 seconds. The published 4,309,214-byte asset has SHA-256 `e7cbb9841b58df4da9ae99c5763996a71078ca75071050041a0697307961af1b`, matching GitHub's asset digest. Visual inspection covered the terminal, HTML report, and failing-Action scenes. The source contains only synthetic operation names and public project references; no secret, personal, or production trace data is included.
+
+After the demonstration and release-state documentation changes, the final repository-native Windows gate passed in 46.4 seconds: formatting was clean, all ten packages passed, vet returned no findings, and the CLI built. `go test -race -count=1 ./...` then passed all ten packages in 22.5 seconds. The PowerShell renderer parsed cleanly, its vendored source matched upstream 1.0.6 line-for-line, and source audits found no network/browser-storage code or sensitive-looking demo values.
+
+PR #7 was replayed onto the rebased foundation as commit `8d6b247`, restoring its intended two-file, 12-addition/11-deletion, mergeable diff. Both refreshed Linux jobs and both Windows jobs passed; `compare-example` failed intentionally in 21 seconds. Fresh artifact `8510863623` contains the exact non-empty 390-byte text, 2,398-byte JSON, and 6,206-byte HTML reports, and the JSON/text checks confirmed one added, one removed, two changed, and the documented four findings.
+
+After the demonstration and release-state documentation changes, the final repository-native Windows gate passed in 46.4 seconds: formatting was clean, all ten packages passed, vet returned no findings, and the CLI built. `go test -race -count=1 ./...` then passed all ten packages in 22.5 seconds. The PowerShell renderer parsed cleanly, its vendored source matched upstream 1.0.6 line-for-line, and source audits found no network/browser-storage code or sensitive-looking demo values.
+
+The preceding TD-032 validation recorded 28,643 parser fuzz executions, 4,401 matcher executions, and 2,625 reporter executions. The Action entry smoke passed pass/regression/tool-error outcomes and text/JSON/HTML consistency; `go test -race -count=1 ./...` passed all ten packages. Foundation PR #6's Linux CI included bounded fuzz plus real composite-Action `0`/`1`/`2` checks.
 
 The preceding comprehensive validation was recorded on 2026-07-19 after TD-029, using Go 1.26.0 and Windows PowerShell 5.1 on Windows:
 
@@ -103,4 +115,4 @@ The recurring `Script running with cell ID ...` status was the automation layer 
 
 ## Next recommended task
 
-**TD-033 — Publish versioned v0.1 binaries.** Add least-privilege tag automation, reproducible five-target builds, SHA-256 checksums, and a verified dry run before any release tag is created.
+No task is selected. The finite v0.1 contract is complete; choose one item from **After v0.1** in [`tasks.md`](tasks.md) explicitly before starting new scope.

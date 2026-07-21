@@ -6,7 +6,7 @@
 [![CI](https://github.com/ArinF1/TraceDelta/actions/workflows/ci.yml/badge.svg)](https://github.com/ArinF1/TraceDelta/actions/workflows/ci.yml)
 
 > [!WARNING]
-> TraceDelta is early-stage software. The current implementation proves a small local comparison path over a documented OTLP JSON subset; it is not yet a complete OTLP analyzer or a stable integration contract.
+> TraceDelta v0.1 is experimental software. It implements a finite local comparison contract over a documented OTLP JSON profile; it is not a universal OTLP analyzer or a v1-stable integration contract.
 
 A source diff tells reviewers which lines changed. It does not tell them that checkout now writes an order before payment succeeds, calls inventory three times, drops a database predicate, or becomes materially slower. TraceDelta is being built to compare OpenTelemetry traces from a baseline and a candidate application version and report those runtime behavior changes directly.
 
@@ -33,6 +33,8 @@ Changes:
 
 Result: behavioral differences detected
 ```
+
+[Watch the 52-second v0.1 demonstration](https://github.com/ArinF1/TraceDelta/releases/download/v0.1.0/tracedelta-v0.1-demo.webm), then use the accompanying [on-screen transcript and reproducible commands](docs/demo.md). It walks through the synthetic inputs, terminal result, JSON/HTML artifacts, and deliberately failing Action in public [PR #7](https://github.com/ArinF1/TraceDelta/pull/7).
 
 ## Current capabilities
 
@@ -89,13 +91,13 @@ The comparison command, flags, output contract, and exit codes are specified in 
 
 ## Versioned binaries
 
-Tagged v0.1 releases provide Linux amd64/arm64, macOS amd64/arm64, and Windows amd64 binaries plus one SHA-256 checksum file. After a release is published, download the binary for your platform and `tracedelta_<version>_checksums.txt` from the [GitHub Releases page](https://github.com/ArinF1/TraceDelta/releases), then verify it before execution:
+The published [v0.1.0 release](https://github.com/ArinF1/TraceDelta/releases/tag/v0.1.0) provides Linux amd64/arm64, macOS amd64/arm64, and Windows amd64 binaries plus one SHA-256 checksum file. Download the binary for your platform and `tracedelta_0.1.0_checksums.txt`, then verify it before execution:
 
 ```bash
 sha256sum --check tracedelta_0.1.0_checksums.txt --ignore-missing
 ```
 
-No stable release has been published yet. Exact names, dry-run instructions, permissions, and the conservative release procedure are documented in [`docs/release-process.md`](docs/release-process.md).
+Exact names, dry-run instructions, permissions, and the conservative release procedure are documented in [`docs/release-process.md`](docs/release-process.md). v0.1.0 is experimental and deliberately makes no signing, package-manager, SBOM, or container-image promise.
 
 ## Development
 
@@ -134,7 +136,7 @@ The current slice implements only the minimum of those stages needed for determi
 
 ## Project status
 
-TraceDelta is experimental and has no stable release yet. `v0.1.0-dev` identifies the repository's current development line, not a published or compatibility-guaranteed release. Files under `docs/` distinguish current behavior from proposed behavior; incomplete features are tracked rather than implied.
+TraceDelta v0.1.0 is published but remains experimental. Its documented v0.1 CLI, report, Action, and input-profile contracts are the supported release boundary; compatibility is not promised beyond that boundary or as a v1-stable API. Files under `docs/` distinguish current behavior from future work, which remains tracked rather than implied.
 
 The canonical Go module path is `github.com/ArinF1/TraceDelta`. Security reports should be sent privately to `tracedelta.security@gmail.com` as described in the [security policy](SECURITY.md).
 

@@ -4,24 +4,11 @@ This is the execution backlog and status record. Work on one task at a time, nor
 
 ## Now
 
-### TD-033 — Publish versioned v0.1 binaries
-
-- **Description:** Add tag-driven release automation for Linux amd64/arm64, macOS amd64/arm64, and Windows amd64 binaries plus SHA-256 checksums.
-- **Acceptance criteria:** Artifact naming is documented; a dry run builds all five targets; tags matching `v*` create a GitHub Release with binaries and checksums; the workflow uses least privilege and pinned official actions; no signing, package manager, SBOM, or container promise is implied for v0.1.
-- **Status:** The fail-closed five-target builder, checksum verification, pinned least-privilege workflow, documentation, local dry run, and independent Linux CI dry run are complete. Final workflow dispatch/tag publication is pending explicit approval to merge foundation PR #6 into `main` and push the immutable `v0.1.0` tag; no release has been claimed or created.
-- **Relevant files:** `.github/workflows/`, `docs/release-process.md`, `README.md`, `CHANGELOG.md`
-- **Dependencies:** TD-032
+No task is selected. The finite v0.1 release contract is complete; choose and record a post-v0.1 task explicitly before expanding scope.
 
 ## Next
 
-The following sequence is the complete remaining v0.1 gate after the current task. Execute one task at a time in this order unless a dependency or verified finding requires an explicit reprioritization.
-
-### TD-034 — Publish the 45–60 second demonstration
-
-- **Description:** Record and publish a concise demonstration of the versioned binary and deliberately regressed pull-request workflow.
-- **Acceptance criteria:** The recording is 45–60 seconds, shows the inputs, terminal regression result, JSON/HTML artifacts, and failing Action without exposing personal data; a short transcript and reproducible command sequence accompany it; the README links the final asset.
-- **Relevant files:** `README.md`, `docs/`, `examples/`
-- **Dependencies:** TD-031, TD-033
+There is no remaining v0.1 release gate.
 
 ## After v0.1
 
@@ -57,6 +44,22 @@ These tasks remain useful but do not block the first release.
 
 ## Completed
 
+### TD-034 — Publish the 45–60 second demonstration
+
+- **Description:** Record and publish a concise demonstration of the versioned binary and deliberately regressed pull-request workflow.
+- **Acceptance criteria:** The recording is 45–60 seconds, shows the inputs, terminal regression result, JSON/HTML artifacts, and failing Action without exposing personal data; a short transcript and reproducible command sequence accompany it; the README links the final asset.
+- **Outcome:** Published a silent 52-second 1280×720 WebM as a v0.1.0 release asset. It uses only synthetic data and shows the baseline/candidate spans, exact four terminal findings, schema-versioned JSON and standalone HTML artifacts, and PR #7's green normal checks plus intentionally failing `compare-example` job. Added a timestamped on-screen transcript, public-branch reproduction commands, deterministic local recording source, finite-duration validator, README/release links, and retained MIT license for the local WebM metadata helper.
+- **Relevant files:** `README.md`, `docs/demo.md`, `docs/demo/`, `scripts/record-demo.ps1`, `examples/regression-app/`
+- **Dependencies:** TD-031, TD-033
+
+### TD-033 — Publish versioned v0.1 binaries
+
+- **Description:** Add tag-driven release automation for Linux amd64/arm64, macOS amd64/arm64, and Windows amd64 binaries plus SHA-256 checksums.
+- **Acceptance criteria:** Artifact naming is documented; a dry run builds all five targets; tags matching `v*` create a GitHub Release with binaries and checksums; the workflow uses least privilege and pinned official actions; no signing, package manager, SBOM, or container promise is implied for v0.1.
+- **Outcome:** Squash-merged green foundation PR #6, ran the read-only `v0.1.0-test` workflow from `main`, and verified its exact six-file bundle. Pushed annotated tag `v0.1.0`; tag workflow run `29867939602` built five targets, verified checksums before and after artifact transfer, and published the non-draft GitHub Release. Independently downloaded all six binary/checksum assets, verified every SHA-256 entry, and ran the public Windows binary successfully. The workflow remains least-privilege and all official actions are pinned.
+- **Relevant files:** `.github/workflows/release.yml`, `scripts/build-release.sh`, `scripts/build-release.smoke.sh`, `docs/release-process.md`, `README.md`, `CHANGELOG.md`
+- **Dependencies:** TD-032
+
 ### TD-032 — Complete the v0.1 verification matrix
 
 - **Description:** Add the integration, race, and focused fuzz coverage needed to make the completed release workflow trustworthy without duplicating unit-test coverage.
@@ -69,7 +72,7 @@ These tasks remain useful but do not block the first release.
 
 - **Description:** Add a small synthetic example application and a public pull request whose intentional regression exercises added/removed spans, an error change, and a latency regression through the reusable Action.
 - **Acceptance criteria:** The application emits deterministic synthetic OTLP JSON without external services or secrets; baseline and candidate collection is reproducible; the linked pull request fails for the documented reasons and preserves all three report formats; maintainers can reset/replay the demonstration without rewriting history.
-- **Outcome:** Added a deterministic standard-library Go example that emits synthetic OTLP/HTTP JSON with no network or secret. The fork-safe workflow regenerates baseline and candidate artifacts from their exact commits, executes the trusted base Action, uploads all three reports, and then enforces the result. Public draft [PR #7](https://github.com/ArinF1/TraceDelta/pull/7) changes only the scenario and its contract test; normal Linux/Windows CI passes, the example comparison fails with the promised four findings, and the retained artifact contains non-empty text, JSON, and HTML reports. The branch can be replayed from commit `3021105` without rewriting history.
+- **Outcome:** Added a deterministic standard-library Go example that emits synthetic OTLP/HTTP JSON with no network or secret. The fork-safe workflow regenerates baseline and candidate artifacts from their exact commits, executes the trusted base Action, uploads all three reports, and then enforces the result. Public draft [PR #7](https://github.com/ArinF1/TraceDelta/pull/7) changes only the scenario and its contract test; normal Linux/Windows CI passes, the example comparison fails with the promised four findings, and the retained artifact contains non-empty text, JSON, and HTML reports. After the foundation rebase, the isolated scenario was replayed as commit `8d6b247`; fresh artifact `8510863623` proves the two-file PR remains reproducible without unrelated ancestry.
 - **Relevant files:** `examples/regression-app/`, `.github/workflows/example-regression.yml`, `action.yml`, `README.md`
 - **Dependencies:** TD-015
 
@@ -186,7 +189,7 @@ These tasks remain useful but do not block the first release.
 ### TD-003 — Add baseline verification workflow
 
 - **Description:** Cover the slice with tests and provide consistent formatting, test, vet, build, and example commands locally and in CI.
-- **Acceptance criteria:** Parser/diff/order/exit behavior tests pass; `gofmt`, `go test ./...`, `go vet ./...`, and CLI build are checked; the example's expected difference exit is verified; CI has no release publishing.
+- **Acceptance criteria:** Parser/diff/order/exit behavior tests pass; `gofmt`, `go test ./...`, `go vet ./...`, and CLI build are checked; the example's expected difference exit is verified; the initial CI foundation has no release publishing.
 - **Relevant files:** Go test files, `Makefile`, `scripts/check.sh`, `.github/workflows/ci.yml`
 - **Dependencies:** TD-002
 

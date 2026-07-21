@@ -4,9 +4,9 @@ This roadmap defines a finite v0.1 release, not an expanding sequence of desirab
 
 ## Already established
 
-The repository foundation, local comparison vertical slice, representative typed OTLP JSON parsing, deterministic trace-preserving normalization, checks, and public project governance are complete. The current implementation is still `v0.1.0-dev`; these foundations are not a published release.
+The finite v0.1 sequence below is complete. TraceDelta v0.1.0 is published with the documented OTLP profile, deterministic matching and bounded findings, redaction, three report formats, reusable Action, synthetic regression PR, verification matrix, five checksum-verified binaries, and a 52-second demonstration.
 
-## v0.1 release sequence
+## Completed v0.1 release sequence
 
 ### 1. Trustworthy input and correspondence
 
