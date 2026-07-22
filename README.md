@@ -107,6 +107,8 @@ The reusable composite [GitHub Action](docs/github-action.md) builds the source 
 
 The deterministic [example application](examples/regression-app/README.md) is exercised by public draft [PR #7](https://github.com/ArinF1/TraceDelta/pull/7): normal repository checks pass, the behavior comparison fails intentionally with the four documented findings, and all three reports are retained as one short-lived workflow artifact.
 
+For embedding TraceDelta in Go, the [public API tour](examples/api-tour/README.md) runs a tiny loopback fixture server and demonstrates `DefaultOptions`, reader and file comparison, typed findings, and all three report writers in one inspectable standard-library example.
+
 Common commands are exposed through the Makefile:
 
 ```bash

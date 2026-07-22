@@ -1,6 +1,6 @@
 # Current state
 
-Last updated: 2026-07-21
+Last updated: 2026-07-22
 
 ## Current version
 
@@ -26,6 +26,7 @@ The repository uses Go 1.26, the newest stable Go version available when the pro
 - Process outcomes distinguish no differences (`0`), behavioral differences (`1`), and invocation/input failures (`2`).
 - A reusable composite GitHub Action builds TraceDelta from its pinned Action source, accepts caller-supplied artifacts plus finite latency/redaction inputs, exposes structured outcome/report outputs, and preserves reports for completed exit `0`/`1` comparisons while failing tool/input exit `2` without partial artifacts.
 - A deterministic synthetic example application emits OTLP/HTTP JSON without services or secrets. Its pull-request workflow regenerates exact base/candidate artifacts, uses the trusted base Action, and public draft PR #7 demonstrates the four v0.1 finding categories while retaining text, JSON, and HTML reports.
+- A separate public Go API tour starts a temporary loopback fixture server, fetches bounded deterministic synthetic snapshots, demonstrates every exported `pkg/tracedelta` function plus typed comparison data, and writes inspectable text, JSON, and HTML artifacts into a caller-selected new directory.
 - Focused fuzz targets cover arbitrary parser input, trace-order-independent matcher output, and terminal/JSON/HTML reporter escaping. CI runs bounded fuzz smoke plus actual composite-Action pass, regression, and tool-error paths with cross-format outcome checks.
 - The published v0.1.0 GitHub Release contains five `CGO_ENABLED=0` Linux/macOS/Windows binaries and a SHA-256 manifest. The tag workflow builds once in a read-only job, verifies the bundle before and after transfer, and grants write permission only to its tag-gated publish job.
 - A published 52-second 1280×720 WebM demonstrates the synthetic inputs, exact terminal findings, JSON/HTML artifacts, and deliberately failing PR #7 Action. A timestamped transcript, public-branch replay commands, and deterministic local recording source accompany it.
@@ -75,6 +76,8 @@ The repository uses Go 1.26, the newest stable Go version available when the pro
 - ADR 0002 fixes a finite v0.1 boundary: realistic OTLP JSON, deterministic matching, added/removed/error/latency findings, early redaction, three report formats, a reusable Action and regressed example, useful unit/integration/race/fuzz coverage, versioned binaries, and a 45–60 second demonstration.
 
 ## Latest validation record
+
+Validated on 2026-07-22 through TD-035. The public API tour's focused package tests passed deterministic OTLP generation, loopback route/method behavior, oversize-response rejection, all five expected findings, report/redaction contracts, and output-directory overwrite refusal. A live run created non-empty 3,573-byte baseline, 3,586-byte candidate, 456-byte text, 2,886-byte JSON, and 6,469-byte HTML artifacts; it reported one added, one removed, three changed spans, and five typed changes. The repository-native Windows entry point then passed formatting, all eleven packages, vet, and CLI build. `go test -race -count=1 ./...` passed all eleven packages, including the server example.
 
 Validated on 2026-07-21 through TD-034. The repository-native Windows entry point passed formatting, all ten packages, vet, and CLI build after the final foundation workflow correction. PR #6 passed both Linux and Windows required checks and was squash-merged at `53b02a9`. Read-only release run `29867684415` built and verified all five targets while skipping publication. Tag run `29867939602` then built the same targets, verified checksums before and after artifact transfer, and published v0.1.0. An independent public download contained the exact five binaries plus checksum manifest; all five hashes matched and the Windows binary passed representative-fixture self-comparison with exit `0`.
 
