@@ -21,6 +21,7 @@ coverage*.html
 /reports/
 /tmp/
 /tracedelta-report.*
+/api-tour-output*/
 *.tmp
 
 # Local environment and secrets

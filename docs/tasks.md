@@ -44,6 +44,14 @@ These tasks remain useful but do not block the first release.
 
 ## Completed
 
+### TD-035 — Add a public Go API tour example
+
+- **Description:** Add a small, runnable, local-only HTTP server example that generates synthetic baseline and candidate OTLP JSON and demonstrates every exported `pkg/tracedelta` function in one inspectable workflow.
+- **Acceptance criteria:** The example uses `DefaultOptions`, `Compare`, `CompareFiles`, `WriteText`, `WriteJSON`, and `WriteHTML`; demonstrates `Comparison.HasDifferences` and typed change data; generates all inputs and reports in a caller-selected new directory; uses only loopback networking, bounded HTTP reads/timeouts, synthetic data, and standard-library dependencies; tests cover deterministic snapshots, server error behavior, public API coverage, and artifact contents; its README explains each API call and the limits of the hand-written trace generator; root/current-state documentation links the example; repository validation passes.
+- **Outcome:** Added a standard-library public API tour with a temporary loopback fixture server, deterministic baseline/candidate OTLP generation, two-second client timeout, 1 MiB response bound, caller-selected exclusive output directory, reader/file comparison equivalence check, typed finding summary, and text/JSON/HTML artifacts. The documented local output path is ignored so trying the example does not dirty the repository. The synthetic scenario demonstrates added, removed, status, `error.type`, and latency findings plus ID/time normalization and built-in/caller redaction. Focused tests cover deterministic valid snapshots, 404/405 behavior, oversize rejection, all exported functions and artifacts, five exact findings, redaction, script-free HTML, and overwrite refusal; the repository-native Windows gate and full race suite pass all eleven packages.
+- **Relevant files:** `.gitignore`, `examples/api-tour/`, `README.md`, `docs/current-state.md`, `docs/tasks.md`, `docs/session-log.md`
+- **Dependencies:** v0.1
+
 ### TD-034 — Publish the 45–60 second demonstration
 
 - **Description:** Record and publish a concise demonstration of the versioned binary and deliberately regressed pull-request workflow.
