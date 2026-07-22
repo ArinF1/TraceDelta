@@ -34,7 +34,6 @@ Changes:
 Result: behavioral differences detected
 ```
 
-[Watch the 52-second v0.1 demonstration](https://github.com/ArinF1/TraceDelta/releases/download/v0.1.0/tracedelta-v0.1-demo.webm), then use the accompanying [on-screen transcript and reproducible commands](docs/demo.md). It walks through the synthetic inputs, terminal result, JSON/HTML artifacts, and deliberately failing Action in public [PR #7](https://github.com/ArinF1/TraceDelta/pull/7).
 
 ## Current capabilities
 
